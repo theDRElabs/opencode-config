@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Field Notes</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #18232b; background: #eef3f1; }
+    body { margin: 0; } main { max-width: 920px; margin: 0 auto; padding: 32px 20px; }
+    header { display: flex; justify-content: space-between; gap: 16px; align-items: end; border-bottom: 2px solid #9db4ad; padding-bottom: 20px; }
+    h1 { margin: 0; font-size: 36px; letter-spacing: 0; } h2 { margin: 0 0 6px; }
+     button, input { font: inherit; min-height: 42px; box-sizing: border-box; } button { border: 0; border-radius: 4px; padding: 0 16px; background: #176b5b; color: white; cursor: pointer; }
+    input { width: min(100%, 420px); box-sizing: border-box; border: 1px solid #8ca59e; border-radius: 4px; padding: 0 12px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; } .status { padding: 18px; border-left: 4px solid #176b5b; background: white; }
+    .status.error { border-color: #ad3d35; } .status.loading { border-color: #b98218; }
+    .notes { display: grid; gap: 12px; } article { background: white; border: 1px solid #c7d5d0; border-radius: 4px; padding: 18px; }
+    .meta { color: #5b6d68; font-size: 14px; } .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+     @media (max-width: 600px) { main { padding: 20px 14px; } header { align-items: start; flex-direction: column; } h1 { font-size: 30px; } .toolbar { flex-direction: column; } .toolbar > :not(.sr-only) { width: 100%; min-width: 0; } }
+  </style>
+</head>
+<body>
+<main>
+  <header><div><p class="meta">NORTH LOOP / 2026</p><h1>Field Notes</h1></div><button data-testid="sign-out">Sign out</button></header>
+  <section class="toolbar" aria-label="Note search"><label class="sr-only" for="search">Search notes</label><input id="search" data-testid="search-input" placeholder="Search notes"><button data-testid="new-note" hidden>New note</button></section>
+  <div data-testid="status" class="status" hidden></div><section data-testid="notes" class="notes"></section>
+</main>
+<script>
+  const params = new URLSearchParams(location.search), state = params.get('state') || 'ready', requestedRole = params.get('role') || 'editor';
+  const status = document.querySelector('[data-testid=status]'), notes = document.querySelector('[data-testid=notes]'), search = document.querySelector('[data-testid=search-input]');
+  const newNote = document.querySelector('[data-testid=new-note]');
+  let visibleNotes = [];
+  function show(kind, text) { status.hidden = false; status.className = 'status ' + kind; status.textContent = text; }
+  function render(items) { notes.innerHTML = items.map(n => `<article data-testid="note-card"><h2>${n.title}</h2><p>${n.body}</p><p class="meta">Owned by ${n.owner}</p></article>`).join(''); }
+  async function initialize() {
+    const sessionState = state === 'unauthorized' ? 'unauthorized' : 'authenticated';
+    const sessionResponse = await fetch('/api/fixture-session', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ state: sessionState, role: requestedRole })
+    });
+    const session = await sessionResponse.json();
+    newNote.hidden = !session.canCreate;
+    search.disabled = !session.authorized;
+    if (!session.authorized) { show('error', 'You do not have access to these notes.'); return; }
+    if (state === 'loading') { show('loading', 'Loading field notes...'); return; }
+    if (state === 'error') { show('error', 'Notes could not be loaded. Try again.'); fetch('/api/notes?failure=1'); return; }
+    if (state === 'empty') { show('ready', 'No notes yet. Create the first field note.'); return; }
+    const response = await fetch('/api/notes');
+    if (!response.ok) { show('error', 'You do not have access to these notes.'); return; }
+    visibleNotes = await response.json();
+    render(visibleNotes);
+  }
+  search.addEventListener('input', () => { const query = search.value.trim().toLowerCase(); render(visibleNotes.filter(n => (n.title + n.body).toLowerCase().includes(query))); });
+  newNote.addEventListener('click', async () => {
+    const response = await fetch('/api/notes/new', { method: 'POST' });
+    show(response.ok ? 'ready' : 'error', response.ok ? 'New note form opened.' : 'Editors can create notes.');
+  });
+  document.querySelector('[data-testid=sign-out]').addEventListener('click', async () => {
+    await fetch('/api/sign-out', { method: 'POST' });
+    location.href = '?state=unauthorized';
+  });
+  initialize().catch(() => show('error', 'Notes could not be loaded. Try again.'));
+</script>
+</body>
+</html>

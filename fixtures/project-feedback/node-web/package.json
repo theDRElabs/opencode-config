@@ -1,0 +1,15 @@
+{
+  "name": "phase-5-feedback-fixture",
+  "private": true,
+  "scripts": {
+    "format": "node scripts/format.js",
+    "lint": "node scripts/lint.js",
+    "typecheck": "node --check src/value.js",
+    "test": "node --test test/value.test.js",
+    "build": "node scripts/build.js",
+    "start": "node dist/value.txt",
+    "e2e": "node -e \"require('node:fs').accessSync('dist/value.txt')\"",
+    "check:fast": "npm run format && npm run lint && npm run typecheck && npm test",
+    "check:full": "npm run check:fast && npm run build"
+  }
+}

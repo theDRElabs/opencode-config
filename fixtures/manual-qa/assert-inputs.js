@@ -1,0 +1,16 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const root = process.argv[2];
+const required = ['issue.md', 'qa-checklist.md', 'expected-follow-up.md', 'frontend/index.html', 'run-validation.sh', 'browser-check.js'];
+for (const file of required) if (!fs.existsSync(path.join(root, file))) throw new Error(`missing ${file}`);
+const skill = fs.readFileSync(path.resolve(root, '../../skills/manual-qa-plan/SKILL.md'), 'utf8');
+for (const term of ['Primary workflow', 'Empty state', 'Loading state', 'Error state', 'Authentication and authorization', 'Responsive behavior', 'Realistic data', 'Browser health', 'Visual quality', 'Ownership Boundary', 'QA Finding']) if (!skill.includes(term)) throw new Error(`skill missing ${term}`);
+const issue = fs.readFileSync(path.join(root, 'expected-follow-up.md'), 'utf8');
+for (const term of ['Observable Problem', 'Reproduction Steps', 'environment:', 'Evidence', 'severity:', 'affected_workflow:', 'Proposed Acceptance Criteria', 'blocker_status:', 'owner_or_human_decision:']) if (!issue.includes(term)) throw new Error(`follow-up missing ${term}`);
+const status = issue.match(/^status:\s*(\S+)/m)?.[1];
+if (!['blocked', 'ready', 'accepted-risk', 'resolved'].includes(status)) throw new Error(`invalid follow-up status ${status}`);
+const server = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
+for (const term of ['/api/notes', '/api/notes/new', 'fixture_session', "json(response, 403"]) if (!server.includes(term)) throw new Error(`server authorization missing ${term}`);
+const frontend = fs.readFileSync(path.join(root, 'frontend/index.html'), 'utf8');
+if (frontend.includes('Rain garden survey') || frontend.includes('Transit shelter sketch')) throw new Error('protected note data is embedded in frontend source');
+console.log('complete Phase 8 fixture inputs and follow-up issue shape passed');

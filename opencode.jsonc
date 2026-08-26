@@ -1,0 +1,133 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "/root/.config/opencode/HARNESS-CONTRACT.md"
+  ],
+  "provider": {
+    "anthropic": {
+      "options": {
+        "apiKey": "{env:ANTHROPIC_API_KEY}"
+      }
+    },
+    "agentrouter": {
+      "npm": "@ai-sdk/anthropic",
+      "name": "AgentRouter (Anthropic)",
+      "options": {
+        "baseURL": "https://agentrouter.org",
+        "apiKey": "{env:AGENTROUTER_API_KEY}"
+      },
+      "models": {
+        "claude-opus-4-8": {
+          "name": "claude-opus-4-8"
+        },
+        "claude-opus-5": {
+          "name": "claude-opus-5"
+        }
+      }
+    },
+    "agentrouter-openai": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "AgentRouter (OpenAI Compatible)",
+      "options": {
+        "baseURL": "https://agentrouter.org/v1",
+        "apiKey": "{env:AGENTROUTER_API_KEY}"
+      },
+      "models": {
+        "gpt-5.6-sol": {
+          "name": "gpt-5.6-sol"
+        }
+      }
+    },
+    "bluesminds": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "BluesMinds",
+      "options": {
+        "baseURL": "https://api.bluesminds.com/v1",
+        "apiKey": "{env:BLUESMINDS_API_KEY}"
+      },
+      "models": {
+        "gpt-5.6-sol": {
+          "name": "GPT-5.6 Sol"
+        },
+        "gpt-5.6-luna": {
+          "name": "GPT-5.6 Luna"
+        },
+        "gpt-5.6-terra": {
+          "name": "GPT-5.6 Terra"
+        },
+        "gpt-5.2-chat": {
+          "name": "GPT-5.2 Chat"
+        },
+        "gpt-5-mini": {
+          "name": "GPT-5 Mini"
+        },
+        "gpt-4o": {
+          "name": "GPT-4o"
+        },
+        "kimi-k2.5": {
+          "name": "Kimi K2.5"
+        },
+        "gemma-4-26b": {
+          "name": "Gemma 4 26B"
+        },
+        "meta/llama-3.3-70b-instruct": {
+          "name": "Llama 3.3 70B Instruct"
+        },
+        "meta/llama-3.1-70b-instruct": {
+          "name": "meta/llama-3.1-70b-instruct"
+        },
+        "meta/llama-3.2-11b-vision-instruct": {
+          "name": "meta/llama-3.2-11b-vision-instruct"
+        },
+        "meta/llama-3.1-8b-instruct": {
+          "name": "meta/llama-3.1-8b-instruct"
+        },
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {
+          "name": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+        },
+        "nvidia/nemotron-mini-4b-instruct": {
+          "name": "nvidia/nemotron-mini-4b-instruct"
+        },
+        "nvidia/nvidia-nemotron-nano-9b-v2": {
+          "name": "nvidia/nvidia-nemotron-nano-9b-v2"
+        },
+        "nvidia/llama-3.3-nemotron-super-49b-v1": {
+          "name": "nvidia/llama-3.3-nemotron-super-49b-v1"
+        },
+        "nvidia/llama-3.3-nemotron-super-49b-v1.5": {
+          "name": "nvidia/llama-3.3-nemotron-super-49b-v1.5"
+        },
+        "nvidia/llama-3.1-nemotron-nano-vl-8b-v1": {
+          "name": "nvidia/llama-3.1-nemotron-nano-vl-8b-v1"
+        },
+        "nvidia/llama-3.1-nemoguard-8b-content-safety": {
+          "name": "nvidia/llama-3.1-nemoguard-8b-content-safety"
+        },
+        "nvidia/llama-3.1-nemoguard-8b-topic-control": {
+          "name": "nvidia/llama-3.1-nemoguard-8b-topic-control"
+        },
+        "nvidia/riva-translate-4b-instruct-v1.1": {
+          "name": "nvidia/riva-translate-4b-instruct-v1.1"
+        },
+        "deepseek-v4-pro": {
+          "name": "deepseek-v4-pro"
+        },
+        "gpt-5.5": {
+          "name": "GPT-5.5"
+        },
+        "gpt-5.3-codex": {
+          "name": "GPT-5.3 Codex"
+        },
+        "gpt-oss-20b": {
+          "name": "GPT-OSS 20B"
+        },
+        "openai/gpt-oss-20b": {
+          "name": "openai/gpt-oss-20b"
+        },
+        "google/diffusiongemma-26b-a4b-it": {
+          "name": "google/diffusiongemma-26b-a4b-it"
+        }
+      }
+    }
+  }
+}
