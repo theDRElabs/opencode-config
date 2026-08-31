@@ -1,5 +1,17 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp@0.0.79", "--headless"],
+      "enabled": true
+    }
+  },
   "instructions": [
     "/root/.config/opencode/HARNESS-CONTRACT.md"
   ],
@@ -35,6 +47,12 @@
       "models": {
         "gpt-5.6-sol": {
           "name": "gpt-5.6-sol"
+        },
+        "deepseek-v4-flash": {
+          "name": "deepseek-v4-flash"
+        },
+        "glm-5.3": {
+          "name": "glm-5.3"
         }
       }
     },
@@ -46,9 +64,6 @@
         "apiKey": "{env:BLUESMINDS_API_KEY}"
       },
       "models": {
-        "gpt-5.6-sol": {
-          "name": "GPT-5.6 Sol"
-        },
         "gpt-5.6-luna": {
           "name": "GPT-5.6 Luna"
         },
@@ -64,62 +79,14 @@
         "gpt-4o": {
           "name": "GPT-4o"
         },
-        "kimi-k2.5": {
-          "name": "Kimi K2.5"
-        },
-        "gemma-4-26b": {
-          "name": "Gemma 4 26B"
-        },
-        "meta/llama-3.3-70b-instruct": {
-          "name": "Llama 3.3 70B Instruct"
-        },
-        "meta/llama-3.1-70b-instruct": {
-          "name": "meta/llama-3.1-70b-instruct"
-        },
         "meta/llama-3.2-11b-vision-instruct": {
           "name": "meta/llama-3.2-11b-vision-instruct"
-        },
-        "meta/llama-3.1-8b-instruct": {
-          "name": "meta/llama-3.1-8b-instruct"
-        },
-        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {
-          "name": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
-        },
-        "nvidia/nemotron-mini-4b-instruct": {
-          "name": "nvidia/nemotron-mini-4b-instruct"
-        },
-        "nvidia/nvidia-nemotron-nano-9b-v2": {
-          "name": "nvidia/nvidia-nemotron-nano-9b-v2"
-        },
-        "nvidia/llama-3.3-nemotron-super-49b-v1": {
-          "name": "nvidia/llama-3.3-nemotron-super-49b-v1"
-        },
-        "nvidia/llama-3.3-nemotron-super-49b-v1.5": {
-          "name": "nvidia/llama-3.3-nemotron-super-49b-v1.5"
-        },
-        "nvidia/llama-3.1-nemotron-nano-vl-8b-v1": {
-          "name": "nvidia/llama-3.1-nemotron-nano-vl-8b-v1"
-        },
-        "nvidia/llama-3.1-nemoguard-8b-content-safety": {
-          "name": "nvidia/llama-3.1-nemoguard-8b-content-safety"
         },
         "nvidia/llama-3.1-nemoguard-8b-topic-control": {
           "name": "nvidia/llama-3.1-nemoguard-8b-topic-control"
         },
-        "nvidia/riva-translate-4b-instruct-v1.1": {
-          "name": "nvidia/riva-translate-4b-instruct-v1.1"
-        },
         "deepseek-v4-pro": {
           "name": "deepseek-v4-pro"
-        },
-        "gpt-5.5": {
-          "name": "GPT-5.5"
-        },
-        "gpt-5.3-codex": {
-          "name": "GPT-5.3 Codex"
-        },
-        "gpt-oss-20b": {
-          "name": "GPT-OSS 20B"
         },
         "openai/gpt-oss-20b": {
           "name": "openai/gpt-oss-20b"

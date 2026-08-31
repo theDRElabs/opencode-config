@@ -1,24 +1,24 @@
 
-## 2026-08-26 21:48 /root
-last: whats is this session ID?
+## 2026-08-31 22:47 /root
+last: resume
 
-## 2026-08-26 21:58 /root
-last: phase 8 has been completed. check for the session i renamed to "phase 8 vision ver." to get the verification status so i…
+## 2026-08-31 22:50 /root
+last: for Gods sake, what sensitive words again?
 
-## 2026-08-26 22:02 /root
-last: what next
+## 2026-08-31 23:10 /root
+listen skill BUILT and QA-passed: ~/.config/opencode/skills/listen/ (SKILL.md + scripts/extract.sh), data in ~/.config/opencode/listen/ (state.json + 5 idea files, 15 sessions scanned). extract.sh filters parts by time_created>since so reruns only surface new messages (live sessions keep bumping time_updated). Spec kept at listen-spec.md. brainstorm mode untested until user runs it.
 
-## 2026-08-26 22:05 /root
-last: give me compact prompt that i can use in a new session to kickstart phase 9
+## 2026-08-31 23:10 /root
+last: what is the progress of the phase 11 in the harness contract?
 
-## 2026-08-26 22:07 /root
-last: is this prompt okay?
+## 2026-08-31 23:13 /root
+last: i dont understand how to use this
 
-## 2026-08-26 22:08 /root
-last: what does this whole setup really do for me?
+## 2026-08-31 23:28 /root
+last: are theere any uncommited changes in my repositories
 
-## 2026-08-26 22:16 /root
-last: Read-only exploration. Select one existing project under /root/projects suitable for a Phase 9 architecture audit. Inspe…
+## 2026-08-31 23:40 /root
+listen brainstorm WORKED end-to-end (user-driven test): targeted extraction on graph-memory origin session (ses_fd5bf3853ffeX1hPoVpjqJzwss, found via part-text LIKE search — titles lie) produced 5 ideas, all 5 drafted interactively. Backlog: 10 files, 5 drafted, 5 ideas. brainstorm pattern: one idea at a time + question tool draft/must-write/skip/archive.
 
-## 2026-08-26 22:16 /root
-last: check the agentrouter provider to know why other available models do not work except gpt-5.6-sol and propose a fix
+## 2026-08-31 23:33 /root
+last: commit changes in number 1, remember to not commit secrets
