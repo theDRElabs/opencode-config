@@ -1,0 +1,22 @@
+{
+  "categories": [
+    "high coupling",
+    "shallow-module cluster",
+    "excessive public surface",
+    "repeated orchestration",
+    "heavy mocking",
+    "missing integration seam",
+    "untested logic",
+    "dependency-direction problem"
+  ],
+  "evidence": {
+    "high coupling": ["src/db.js:1", "src/db.js:12", "src/db.js:18"],
+    "shallow-module cluster": ["src/task-client.js:1", "src/task-api.js:3"],
+    "excessive public surface": ["src/db.js:3", "src/db.js:4", "test/create-route.test.js:1"],
+    "repeated orchestration": ["src/create-route.js:4", "src/import-route.js:3"],
+    "heavy mocking": ["test/create-route.test.js:4", "test/create-route.test.js:5", "test/create-route.test.js:7", "test/create-route.test.js:8", "test/create-route.test.js:9"],
+    "missing integration seam": ["src/create-route.js:1", "src/db.js:12"],
+    "untested logic": ["src/create-route.js:5", "src/db.js:18"],
+    "dependency-direction problem": ["src/db.js:1", "src/contracts.js:1"]
+  }
+}

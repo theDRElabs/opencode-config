@@ -1,0 +1,9 @@
+import { createTask, sendTaskCreated } from "./db.js";
+
+export async function post(request, mailer) {
+  const body = await request.json();
+  if (!body.title) return { status: 422 };
+  const task = createTask(body);
+  await sendTaskCreated(task, mailer);
+  return { status: 201, task };
+}
