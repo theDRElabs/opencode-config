@@ -89,8 +89,8 @@ human intent
 | 8 | Human QA and Visual Verification | completed | `HARNESS-PHASE-8-VALIDATION.md`, manual QA skill and browser workflow |
 | 9 | Architecture Improvement | completed | architecture-audit skill |
 | 10 | Sequential AFK Runner | completed | bounded sequential orchestrator and `HARNESS-PHASE-10-VALIDATION.md` |
-| 11 | Sandboxing and Worktrees | in_progress | isolated execution environment |
-| 12 | Parallel Execution | pending | dependency-aware parallel orchestrator |
+| 11 | Sandboxing and Worktrees | completed | isolated execution environment |
+| 12 | Parallel Execution | in_progress | dependency-aware parallel orchestrator |
 | 13 | External Domain Skills | pending | vetted skill set and adoption record |
 | 14 | Metrics and Improvement | pending | harness metrics and tuning loop |
 
@@ -670,9 +670,110 @@ commands, direct production-branch mutation, and unapproved pushes.
 - Sequential post-repair validation returned exit `0` for the Phase 11 script,
   the Phase 10 regression script, and `opencode debug config`. Evidence is under
   `/tmp/opencode/p11-validation/logs/` and `/tmp/opencode/p10-validation/logs/`.
-- Four verifier attempts have failed (each repaired and re-validated). Phase 11
-  remains `in_progress` pending a fresh fifth independent verifier. Phase 12
-  remains `pending` and was not started.
+- Four verifier attempts have failed (each repaired and re-validated).
+  Phase 11 remains `in_progress` pending a fresh fifth independent verifier.
+  Phase 12 remains `pending` and was not started.
+- Fifth verifier (fresh-reviewer session `ses_facf9bb36ffeZ1Yxj7UBkOPr8J`)
+  returned `FAIL` with three blocking findings: Buffer paths validated as
+  decoded strings while the fs API received raw bytes (a non-UTF-8
+  byte-named symlink could escape the checked path), realm-sensitive
+  `instanceof URL` recognition, and incomplete focused red/green and
+  `opencode debug config` command records. One non-blocking finding: a stale
+  three-verifier-count fragment in the validation artifact.
+- Round-6 repairs: Buffer path arguments that are not lossless UTF-8 fail
+  closed with sandbox `EACCES` before the original API executes (lossless
+  UTF-8 Buffers remain fully supported and byte-equivalent to their string
+  form); URL recognition brand-checks via the realm-independent
+  `Object.prototype.toString` `[object URL]` tag before conversion through
+  the captured `fileURLToPath`; the `file-url-escape` fixture now plants a
+  harness-side non-UTF-8 byte-named symlink pointing at the host sentinel
+  inside the worktree (22 attempts including a vm-realm URL, a forged
+  duck-typed URL object, an `Object.create(URL.prototype)` fake, valid and
+  invalid Buffers, and denied symlink creation); and complete per-command
+  verification records with command, cwd, environment provenance, duration,
+  exit code, and output paths now exist under
+  `/tmp/opencode/phase11-url-fix/records/`.
+- Genuine red evidence against the pre-repair guard:
+  `node test-sandbox.mjs /tmp/opencode/phase11-url-fix/red-final` returned
+  exit `1` with the unrelated host sentinel disclosed through the non-UTF-8
+  Buffer path. Post-repair green returned exit `0` with all 22 attempts
+  matched and no sentinel disclosure. Full sequential validation returned
+  exit `0` for the Phase 11 script, the Phase 10 regression script, and
+  `opencode debug config`.
+- Five verifier attempts have failed (each repaired and re-validated).
+  Phase 11 remains `in_progress` pending a fresh sixth independent verifier.
+  Phase 12 remains `pending` and was not started.
+- Sixth verifier (fresh-reviewer session `ses_fa5c62aa1ffex8BbcvY6fj52lu`,
+  resumed after an interruption) returned `FAIL` with one new blocking
+  finding B1: the guard validated a derived path string but executed the
+  original fs API with the original path object, so Node's own second
+  conversion could diverge for a stateful URL-branded object (a Proxy over
+  a genuine URL with stateful property traps). Non-blocking: N1 a
+  validate-then-open TOCTOU race via same-process workers, N2
+  simulated-not-genuine cross-realm URL coverage, N3 a stale
+  verifier-count narrative, N4 an EEXIST red artifact for the
+  symlink-create vector.
+- B1 was empirically confirmed before repair: a Proxy over a genuine
+  `file:` URL whose `pathname` trap returns the in-scope worktree path on
+  the first read (guard validation) and the host sentinel path on later
+  reads (Node's execution conversion) leaked `SENTINEL-UNRELATED` through
+  `fs.readFileSync(proxy)` under the pre-repair guard. Node 24 reads
+  `pathname` once per conversion, making the divergence deterministic.
+- Round-7 repairs: the fs wrapper writes the validated representation back
+  into the argument (`args[index] = validated`) before `original.apply`, so
+  the original API executes the exact path the guard checked — no second
+  conversion of a hostile object can occur. The `file-url-escape` fixture
+  now includes the stateful-proxy URL (allowed, executes the validated
+  worktree string, must never disclose the sentinel) and a
+  forged-`Symbol.toStringTag` object (denied), for 24 attempts. N1 was
+  added to the documented residual risks; N3 was reworded to the accurate
+  count; N4 was annotated in the validation artifact.
+- TDD evidence with complete records under
+  `/tmp/opencode/phase11-url-fix/records/`: `red-b1-final.json` exit `1`
+  (stateful-proxy leak of `SENTINEL-UNRELATED`, `noSentinelDisclosure:
+  false`) and `green-b1-final.json` exit `0` (all 24 attempts matched, no
+  sentinel disclosure). Full sequential validation returned exit `0` for
+  `p11-full-validation-b1.json`, `p10-regression-validation-b1.json`, and
+  `config-resolution-b1.json` (`opencode debug config`, apiKey values
+  redacted).
+- Six verifier attempts have failed (each repaired and re-validated).
+  Phase 11 remained `in_progress` pending a fresh seventh independent
+  verifier. Phase 12 remained `pending` and was not started.
+- Seventh verifier (fresh-reviewer session
+  `ses_f9d116d3bffeuT4uEMmG5QnDVL`, interrupted and resumed) returned
+  `PASS` with no blocking findings: the B1 writeback repair was confirmed
+  correct by construction and by the genuine red-to-green proof, all nine
+  acceptance criteria were covered, and all records, logs, violation
+  reports, and deny logs were internally consistent. It re-verified every
+  prior blocking class as closed. Three non-blocking findings:
+  `fs.glob` `options.cwd` uninspected, module-loader host reads without
+  adversarial coverage, and array glob patterns denied as unsupported.
+- Round-8 non-blocking repairs (empirically probed first): the glob
+  enumeration concern was inverted — glob internals route through the
+  guard-patched public fs, so out-of-scope `options.cwd` was already
+  denied by defense-in-depth, while the real defects were the glob PATTERN
+  being wrongly path-mapped (falsely denying in-scope globs) and
+  `options.cwd` never being explicitly checked. Repair: `glob`/`globSync`
+  removed from `FS_PATH_ARGS`; dedicated glob wrappers validate
+  `options.cwd` (including URL form, with the same
+  normalize-check-writeback rule) and leave patterns untouched. NB2 was
+  already closed empirically (`require`/`import` of host paths is denied
+  through the loader's patched public fs); fixture vectors added to
+  regression-lock it. NB3 resolved by the same map removal; array-pattern
+  glob vector added. The `file-url-escape` scenario now covers 32
+  attempts.
+- Round-8 TDD evidence under `/tmp/opencode/phase11-url-fix/records/`:
+  `red-nb.json` exit `1` (pre-repair: four out-of-scope glob cwd vectors
+  allowed including `/root` and the URL form; in-scope array-pattern glob
+  falsely denied) and `green-nb-final.json` exit `0` (all 32 attempts
+  matched, no sentinel disclosure). Full sequential validation returned
+  exit `0` for `p11-full-validation-nb.json`,
+  `p10-regression-validation-nb.json`, and `config-resolution-nb.json`
+  (`opencode debug config`, apiKey values redacted).
+- Phase 11 completion gate passed: all authoritative checks pass, verifier
+  7 returned `PASS` with no blocking finding, and its non-blocking
+  findings were repaired and re-validated. Phase 11 is `completed`.
+  Phase 12 remains `pending` and was not started.
 
 ## Phase 12: Parallel Execution
 
@@ -694,6 +795,41 @@ Run genuinely independent issues concurrently without weakening verification.
 
 Independent fixture issues merge with full verification; conflicting or blocked work
 is deferred rather than forced through.
+
+### 2026-09-04: Phase 12 Implementation and Fixture Validation
+
+- Added `fixtures/parallel-afk-runner/`: `orchestrator.mjs` (dependency-ready
+  + output-independent batch selection at most two, concurrent Phase 10
+  runner processes each inside its own Phase 11 issue sandbox with
+  worktrees pre-created sequentially, per-issue private backlog copies so
+  the unchanged runner selects exactly its own issue, reconciliation with
+  follow-up renumbering, branch-diff file-overlap contention check with
+  `COORDINATION:` opt-in, recorded unapproved human merge gates mirrored
+  from `humanApprovalRequiredFor`, `--authorize-merge` recording approval,
+  sequential merge queue with dedicated detached merge worktrees and full
+  post-merge checks before each gated landing via pinned `update-ref`,
+  merge-conflict/post-merge-failure abort-block with evidence,
+  protected-ref fail-closed checkpoint revoking all gates on any outside
+  movement, interruption with exact resume, dry run, fail-closed malformed
+  input, exclusive lock, atomic state, `events.jsonl`), the sandbox stage
+  adapter, the sandboxed fixture adapter (real commits, genuine red source,
+  concurrency pause), the full post-merge check adapter, the 15-group
+  adversarial `test-orchestrator.mjs`, `record.mjs` (argv-safe per-command
+  evidence recorder), and `run-validation.sh`.
+- TDD: three genuine reds (stub `not_implemented`; no contention policy;
+  exit-75 crash) each followed by green, with per-command records; cycle
+  retrials and the evidence-placement incident are documented transparently
+  in the validation artifact and `records/README.md`.
+- Authoritative sequential validation: all 13 checks exit `0` (syntax x7,
+  namespace-free, no-remote-mutation, git-allowlist, cli-dry-run x2,
+  scenarios). Phase 11 regression exit `0`, Phase 10 regression exit `0`,
+  `opencode debug config` exit `0`.
+- Human gates unchanged: merge approval is recorded and explicit; push and
+  deploy have no code path anywhere in the orchestrator.
+- Validation and handoff artifacts: `HARNESS-PHASE-12-VALIDATION.md` and
+  `HARNESS-PHASE-12-DIFF.md`. Phase 12 remains `in_progress` pending a
+  fresh independent verifier; Phase 13 remains `pending` and was not
+  started.
 
 ## Phase 13: External Domain Skills
 

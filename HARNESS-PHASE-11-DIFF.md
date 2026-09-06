@@ -13,15 +13,23 @@ verifier must read all of them.
   deploy code path exists.
 - `/root/.config/opencode/fixtures/issue-sandbox/guard-preload.cjs` — in-process
   guard loaded via `NODE_OPTIONS --require`: filesystem scope with realpath
-  symlink-escape denial, protected git ref write denial, host path denial,
-  binary and git-subcommand allowlist, shell execution denial, network
-  (net/dns/tls/http/https) denial, and deny-log recording.
+  symlink-escape denial, byte-safe path normalization (strings, lossless-UTF-8
+  Buffers, realm-independent `file:` URL conversion via `fileURLToPath`,
+  validated-argument writeback so the original API executes exactly the
+  checked path), per-operation path-argument map plus dedicated glob
+  wrappers validating `options.cwd`, protected git ref write denial, host
+  path denial, binary and git-subcommand allowlist, shell execution denial,
+  network (net/dns/tls/http/https) denial, and deny-log recording.
 - `/root/.config/opencode/fixtures/issue-sandbox/test-sandbox.mjs` — adversarial
   deterministic fixtures: happy path with exact environment whitelist, hostile
   secrets, hostile paths (incl. symlink escape), hostile destructive commands
   (incl. `node -e` child escape), hostile production-branch mutation, hostile
-  push/network, dry run, failure capture, and Phase 10 runner integration
-  (success and fail-closed exhaustion).
+  push/network, dry run, failure capture, Phase 10 runner integration
+  (success and fail-closed exhaustion), envstrip/guard-unload escape,
+  native/fs-internals escape, and the 32-attempt `file-url-escape` scenario
+  (URL objects incl. stateful Proxy and forged-tag vectors, Buffer paths
+  incl. non-UTF-8 byte-named symlink escape, glob `options.cwd` incl. URL
+  and array-pattern forms, and `require`/`import` host-path loader vectors).
 - `/root/.config/opencode/fixtures/issue-sandbox/integration-adapter.mjs` —
   wraps the Phase 10 fixture adapter stages in the issue sandbox for runner
   integration.

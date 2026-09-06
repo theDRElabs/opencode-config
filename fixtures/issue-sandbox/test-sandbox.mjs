@@ -256,6 +256,8 @@ process.exit(report.allMatched ? 0 : 1);
 import fsp from "node:fs/promises";
 import path from "node:path";
 import vm from "node:vm";
+import { createRequire } from "node:module";
+const require2 = createRequire(import.meta.url);
 const attemptDir = process.env.SANDBOX_ATTEMPT_DIR;
 const secrets = process.env.SANDBOX_HOST_SECRETS;
 const unrelated = process.env.SANDBOX_HOST_UNRELATED;
@@ -274,6 +276,25 @@ const scratchUrl = urlFor(path.join(process.env.SANDBOX_SCRATCH, "url-scratch.tx
 const crossRealmUrl = vm.runInNewContext("new URL(value)", { URL, value: worktreeUrl.href });
 const fakePrototypeUrl = Object.create(URL.prototype);
 const forgedUrl = { href: worktreeUrl.href, protocol: "file:" };
+// B1 stateful-divergence vectors (sixth verifier): a Proxy over a genuine URL
+// whose pathname trap returns the in-scope worktree path on the first read
+// (the guard's fileURLToPath validation) and the unrelated host sentinel on
+// every later read (Node's own conversion at execution). Pre-repair this
+// leaks the sentinel; post-repair the validated string is what executes, so
+// the worktree file is read and no sentinel can appear.
+let proxyPathnameReads = 0;
+const statefulProxyUrl = new Proxy(worktreeUrl, {
+  get(target, prop) {
+    if (prop === "pathname") {
+      proxyPathnameReads += 1;
+      return proxyPathnameReads <= 1 ? target.pathname : urlFor(path.join(unrelated, "notes.txt")).pathname;
+    }
+    const value = Reflect.get(target, prop, target);
+    return typeof value === "function" ? value.bind(target) : value;
+  }
+});
+const statefulForgedUrl = { href: worktreeUrl.href, protocol: "file:" };
+Object.defineProperty(statefulForgedUrl, Symbol.toStringTag, { value: "URL" });
 const validBuffer = Buffer.from(path.resolve("base.txt"));
 const invalidBuffer = Buffer.from([0x62, 0x61, 0x64, 0xff]);
 for (const [name, expect, fn] of [
@@ -302,6 +323,25 @@ for (const [name, expect, fn] of [
   , ["valid-buffer-worktree", "allowed", () => fs.readFileSync(validBuffer, "utf8")]
   , ["invalid-byte-buffer", "denied", () => fs.readFileSync(invalidBuffer, "utf8")]
   , ["invalid-byte-symlink-create", "denied", () => fs.symlinkSync(unrelated + "/notes.txt", Buffer.from([0x62, 0x61, 0x64, 0xff]))]
+  // Post-repair the proxy read executes the validated worktree string, so it
+  // is allowed — the safety property is that no attempt value ever contains
+  // the sentinel (noSentinelDisclosure below). Pre-repair this same case
+  // reads the unrelated host sentinel through Node's second conversion.
+  , ["stateful-proxy-url", "allowed", () => fs.readFileSync(statefulProxyUrl, "utf8")]
+  , ["stateful-forged-url", "denied", () => fs.readFileSync(statefulForgedUrl, "utf8")]
+  // Seventh-verifier findings: fs.glob options.cwd is a path (must be
+  // scope-checked, including URL form) while the pattern argument is not a
+  // path (must NOT be path-checked, or in-scope globs are falsely denied);
+  // array patterns are a documented form and must work; require/import of
+  // host paths must be denied by the loader's use of patched public fs.
+  , ["glob-cwd-outside", "denied", () => fs.globSync("*", { cwd: unrelated })]
+  , ["glob-cwd-root", "denied", () => fs.globSync("*", { cwd: "/root" })]
+  , ["glob-cwd-url-outside", "denied", () => fs.globSync("*", { cwd: urlFor(unrelated) })]
+  , ["glob-promise-cwd-outside", "denied", () => fsp.glob("*", { cwd: unrelated })]
+  , ["glob-cwd-worktree", "allowed", () => fs.globSync("*.txt", { cwd: process.cwd() })]
+  , ["glob-array-pattern-worktree", "allowed", () => fs.globSync(["*.txt"], { cwd: process.cwd() })]
+  , ["require-host-json", "denied", () => require2(path.join(unrelated, "notes.json"))]
+  , ["import-host-module", "denied", () => import("file://" + path.join(unrelated, "notes.txt"))]
  ]) await attempt(name, expect, fn);
 report.allMatched = report.attempts.every(a => a.outcome === a.expect);
 report.noSentinelDisclosure = report.attempts.every(a => !String(a.value || "").includes("SENTINEL"));
@@ -381,6 +421,7 @@ function setup(name) {
   write(path.join(host, "secrets", "secret.env"), "ANTHROPIC_API_KEY=SENTINEL-SECRET-VALUE\n");
   write(path.join(host, "secrets", "id_rsa"), "-----OPENSSH PRIVATE KEY----- SENTINEL\n");
   write(path.join(host, "unrelated", "notes.txt"), "SENTINEL-UNRELATED\n");
+  write(path.join(host, "unrelated", "notes.json"), JSON.stringify({ sentinel: "SENTINEL-UNRELATED" }) + "\n");
   git(repo, ["init", "-q", "-b", "main"]);
   git(repo, ["config", "user.email", "t@t"]);
   git(repo, ["config", "user.name", "t"]);

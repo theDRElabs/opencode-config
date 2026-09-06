@@ -128,11 +128,17 @@ if (POLICY_FILE && DENY_LOG) {
     utimes: [0], utimesSync: [0], lutimes: [0], lutimesSync: [0],
     access: [0], accessSync: [0], exists: [0], existsSync: [0],
     stat: [0], statSync: [0], lstat: [0], lstatSync: [0],
-    statfs: [0], statfsSync: [0], glob: [0], globSync: [0],
+    statfs: [0], statfsSync: [0],
     chown: [0], chownSync: [0], lchown: [0], lchownSync: [0],
     cp: [0, 1], cpSync: [0, 1],
     watch: [0], watchFile: [0]
   }));
+  // fs.glob/globSync take a PATTERN as argument 0, not a path, so they are
+  // excluded from FS_PATH_ARGS (the pattern must not be path-checked or
+  // legitimate in-scope globs are falsely denied). Their options.cwd IS a
+  // path and is validated explicitly below; glob internals also route
+  // through the patched readdirSync/statSync as defense-in-depth.
+  const GLOB_OPS = new Set(["glob", "globSync"]);
   const WRITE_OPS = new Set(["writeFile", "writeFileSync", "appendFile", "appendFileSync",
     "rename", "renameSync", "copyFile", "copyFileSync", "truncate", "truncateSync",
     "chmod", "chmodSync", "rm", "rmSync", "unlink", "unlinkSync", "rmdir", "rmdirSync",
@@ -153,7 +159,15 @@ if (POLICY_FILE && DENY_LOG) {
       }
       for (const index of pathArgs) {
         const candidate = args[index];
-        checkPath(normalizePathArgument(candidate), writing);
+        // The validated representation replaces the original argument, so the
+        // original API executes the exact path the guard checked. Without the
+        // writeback, Node performs a second conversion of the original object
+        // (its own fileURLToPath / ToString), and a stateful URL-branded
+        // object could present an in-scope path for validation and a
+        // different path at execution (sixth-verifier blocking finding B1).
+        const validated = normalizePathArgument(candidate);
+        checkPath(validated, writing);
+        args[index] = validated;
       }
       return original.apply(this, args);
     };
@@ -162,6 +176,25 @@ if (POLICY_FILE && DENY_LOG) {
   for (const name of FS_PATH_ARGS.keys()) patchFsTarget(rawFs, name);
   if (rawFs.promises) {
     for (const name of FS_PATH_ARGS.keys()) patchFsTarget(rawFs.promises, name);
+  }
+
+  // Glob wrappers: validate options.cwd (a real path, possibly a URL) while
+  // leaving the pattern argument untouched. The writeback rule applies to
+  // the cwd exactly like an indexed path argument.
+  for (const target of [rawFs, rawFs.promises].filter(Boolean)) {
+    for (const name of GLOB_OPS) {
+      const original = target[name];
+      if (typeof original !== "function") continue;
+      target[name] = function wrappedGlob(...args) {
+        const opts = args[1];
+        if (opts !== null && typeof opts === "object" && opts.cwd !== undefined) {
+          const validated = normalizePathArgument(opts.cwd);
+          checkPath(validated, false);
+          args[1] = { ...opts, cwd: validated };
+        }
+        return original.apply(this, args);
+      };
+    }
   }
 
   function isAllowedExecutable(file) {

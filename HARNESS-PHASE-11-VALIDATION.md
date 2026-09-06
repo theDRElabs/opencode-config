@@ -1,8 +1,10 @@
 # Phase 11 Sandboxing and Worktrees Validation
 
 Date: 2026-08-29
-Status: IN_PROGRESS - FOURTH VERIFIER ROUND FAILED AND WAS REPAIRED; ALL
-DETERMINISTIC CHECKS PASS; GATE REQUIRES A FRESH FIFTH INDEPENDENT VERIFIER
+Status: COMPLETED - SIX VERIFIER ROUNDS FAILED AND WERE REPAIRED; THE
+SEVENTH VERIFIER RETURNED PASS WITH NO BLOCKING FINDINGS; ITS THREE
+NON-BLOCKING FINDINGS WERE REPAIRED AND RE-VALIDATED AT EXIT 0; HUMAN
+COMPLETION DECISION RECORDED (USER-DIRECTED AFTER ROUND-8 REPAIR REVIEW)
 
 ## Environment Constraint (design-defining incident)
 
@@ -88,10 +90,11 @@ All checks run one at a time. No concurrent OpenCode processes are used.
    validation returned `0` for all checks and all 14 scenarios; Phase 10
    regression re-run returned `0`.
 
-The producer retry limit is two; it has been exceeded three times under the
-phase's in-progress mandate with each round documented for transparency. Three
-verifier attempts have failed; the third was explicitly user-authorized. A
-fourth verifier launch requires explicit user authorization.
+The producer retry limit is two; it was exceeded repeatedly under the
+phase's in-progress mandate with each round documented for transparency. Six
+verifier attempts failed (the third was explicitly user-authorized after
+budget exhaustion; the sixth and seventh were launched and resumed at the
+user's direction); the seventh returned `PASS`.
 
 ## Fourth-Verifier Repair Record
 
@@ -121,6 +124,153 @@ fourth verifier launch requires explicit user authorization.
   Logs are under `/tmp/opencode/p11-validation/logs/` and
   `/tmp/opencode/p10-validation/logs/`.
 
+## Fifth-Verifier Repair Record
+
+- Verifier 5 (fresh-reviewer session `ses_facf9bb36ffeZ1Yxj7UBkOPr8J`) returned
+  `FAIL` with three blocking findings: (F1) Buffer paths were validated as
+  decoded strings while the original fs API received raw bytes, so a
+  non-UTF-8 byte-named symlink could be checked as a harmless replacement
+  character path while the API followed the real byte-named link; (F2) URL
+  recognition used realm-sensitive `instanceof URL`; (F3) focused red/green
+  runs and the `opencode debug config` claim lacked complete command records
+  (cwd, environment provenance, duration, exit code, artifact paths). One
+  non-blocking finding: (F4) a stale "Three verifier attempts have failed"
+  fragment remained beside the four-verifier record.
+- F1 repair: a Buffer path argument that is not lossless UTF-8 fails closed
+  with a sandbox `EACCES` before the original API executes, because Node
+  re-encodes JS strings to UTF-8 at the native boundary and such a Buffer
+  cannot be validated as a string without changing the bytes actually opened.
+  Lossless UTF-8 Buffers decode to a string that re-encodes to identical
+  bytes, so validating the string is byte-equivalent to validating the Buffer.
+- F2 repair: URL recognition now brand-checks via the realm-independent
+  `Object.prototype.toString.call(candidate) === "[object URL]"` before
+  conversion through the captured `fileURLToPath`. Genuine cross-realm URLs
+  carry the `URL` toStringTag from their own realm's prototype, forged
+  URL-like plain objects do not, and any object that passes the brand check
+  but fails conversion is denied. Node cannot currently construct a genuine
+  cross-realm URL for testing (fresh vm realms lack a URL constructor and
+  worker-thread objects cannot pass by reference), so coverage uses a URL
+  constructed inside a vm realm, a forged duck-typed object (denied), and an
+  `Object.create(URL.prototype)` fake that passes `instanceof` but fails
+  conversion (denied).
+- Fixture extension: the `file-url-escape` scenario now plants a harness-side
+  non-UTF-8 byte-named symlink (pointing at the unrelated host sentinel)
+  inside the worktree via a dry-run pre-pass, so the read denial is proven
+  against a real escape target; the adapter also attempts to create such a
+  symlink itself (must be denied) and reads a valid Buffer path (must be
+  allowed). The scenario covers 22 attempts.
+- F3 repair: complete per-command records with exact command, cwd,
+  environment provenance, duration, exit code, and output paths now exist
+  under `/tmp/opencode/phase11-url-fix/records/`:
+  `red-final.json` (exit `1`, genuine red against the pre-repair guard:
+  the sentinel leaked through the non-UTF-8 Buffer path),
+  `green-final.json` (exit `0`, all 22 attempts matched),
+  `p11-full-validation.json` (exit `0`),
+  `p10-regression-validation.json` (exit `0`), and
+  `config-resolution.json` (exit `0`; `opencode debug config` with provider
+  apiKey values redacted from the retained log).
+- F4 repair: the stale three-verifier fragment was removed; the verifier
+  count is now stated once and accurately.
+
+## Sixth-Verifier Repair Record
+
+- Verifier 6 (fresh-reviewer session `ses_fa5c62aa1ffex8BbcvY6fj52lu`,
+  interrupted mid-investigation and resumed) returned `FAIL` with one new
+  blocking finding B1: the guard validated a *derived* path string but
+  executed the original fs API with the *original path object*, so Node's
+  own second conversion could diverge from the guard's conversion for a
+  stateful URL-branded object. Non-blocking findings: N1 validate-then-open
+  TOCTOU race via same-process workers (inherent to a JS-level guard on this
+  namespace-forbidden device), N2 simulated-not-genuine cross-realm URL
+  coverage (already documented), N3 a stale verifier-count narrative, and
+  N4 the red evidence for the symlink-create vector being an EEXIST error
+  rather than a pre-repair allowance.
+- B1 was empirically confirmed before repair: a Proxy over a genuine
+  `file:` URL whose `pathname` trap returns the in-scope worktree path on
+  the first read (the guard's `fileURLToPath` validation) and the unrelated
+  host sentinel path on every later read (Node's internal conversion at
+  execution) leaked `SENTINEL-UNRELATED` through `fs.readFileSync(proxy)`
+  under the pre-repair guard. Node 24 reads `pathname` once per conversion,
+  so the two conversions are deterministically distinguishable by a counting
+  trap.
+- B1 repair: the wrapper now writes the validated representation back into
+  the argument (`args[index] = validated`) before `original.apply`, so the
+  original API executes the exact path the guard checked — no second
+  conversion of a hostile object can occur. Strings and lossless-UTF-8
+  Buffers are written back unchanged (byte-identical semantics); URL
+  objects are replaced by their converted path string.
+- Fixture extension: the `file-url-escape` scenario now includes
+  `stateful-proxy-url` (Proxy over a genuine URL with a counting
+  `pathname` trap; post-repair it executes the validated worktree string,
+  so it is allowed and must never disclose the sentinel) and
+  `stateful-forged-url` (plain object with a forged `Symbol.toStringTag`;
+  denied by conversion failure). The scenario covers 24 attempts.
+- TDD evidence with complete records under
+  `/tmp/opencode/phase11-url-fix/records/`: `red-b1-final.json` (exit `1`;
+  `stateful-proxy-url` allowed with value `SENTINEL-UNRELATED`,
+  `noSentinelDisclosure: false` — the genuine pre-repair leak) and
+  `green-b1-final.json` (exit `0`; all 24 attempts matched,
+  `stateful-proxy-url` allowed with value `base\n`, no sentinel
+  disclosure).
+- Full sequential validation after the repair: `p11-full-validation-b1.json`
+  exit `0` (all checks incl. the 24-attempt `file-url-escape` scenario),
+  `p10-regression-validation-b1.json` exit `0`, and
+  `config-resolution-b1.json` exit `0` (`opencode debug config`, apiKey
+  values redacted from the retained log).
+- N3 repair: the stale three/four-verifier narrative in the Sequential
+  Validation Record was reworded to the current accurate count. N4 note:
+  in the round-6 red evidence the `invalid-byte-symlink-create` vector
+  failed with EEXIST (the harness-planted byte-named symlink already
+  occupied the name) rather than demonstrating a pre-repair allowance; the
+  green run proves the denial, and the primary red signal (the
+  non-UTF-8 Buffer read leak, and now the stateful-proxy leak) is genuine.
+
+## Seventh-Verifier Record and Non-Blocking Repairs
+
+- Verifier 7 (fresh-reviewer session `ses_f9d116d3bffeuT4uEMmG5QnDVL`,
+  interrupted during its fourth response and resumed) returned `PASS` with
+  no blocking findings: the B1 writeback repair was confirmed correct by
+  construction and by the genuine red-to-green proof, all nine acceptance
+  criteria were covered, and all records/logs/violation reports/deny logs
+  were internally consistent. It re-verified every prior blocking class
+  (env stripping, guard unload, openAsBlob, native loading, file-URL reads,
+  non-UTF-8 Buffer divergence, stateful URL divergence) as closed.
+- Its three non-blocking findings were repaired in round 8:
+  - NB1 (glob `options.cwd`): empirically probed before repair. The
+    verifier's enumeration concern was inverted — glob internals route
+    through the guard-patched public fs (`readdirSync`/`statSync` on the
+    cwd), so out-of-scope `options.cwd` was already denied by
+    defense-in-depth. The real defects were the opposite: the glob PATTERN
+    (argument 0) was wrongly path-mapped in `FS_PATH_ARGS`, falsely denying
+    legitimate in-scope globs (pattern resolved against cwd and scope-check
+    failed), and `options.cwd` itself was never explicitly checked. Repair:
+    `glob`/`globSync` removed from the path-argument map; dedicated glob
+    wrappers now validate `options.cwd` (including URL form, with the same
+    normalize-check-writeback rule) and leave the pattern untouched; glob
+    internals continue to be caught by the patched readdir/stat as a second
+    layer.
+  - NB2 (module-loader host reads): empirically probed under the real
+    guard — `require()` of a host JSON path and dynamic `import()` of host
+    `.json`/`.mjs` are both denied (CJS and ESM resolution route through
+    the guard-patched public fs). Fixture vectors added for both so the
+    property is regression-locked.
+  - NB3 (array glob patterns): resolved by the same FS_PATH_ARGS removal;
+    array-pattern globs now work in scope (fixture vector added).
+- The scenario now covers 32 attempts. TDD evidence with complete records
+  under `/tmp/opencode/phase11-url-fix/records/`: `red-nb.json` (exit `1`;
+  against the pre-repair guard four out-of-scope `glob` cwd vectors were
+  allowed — including `cwd: "/root"` and the URL form — and the
+  array-pattern in-scope glob was falsely denied) and `green-nb-final.json`
+  (exit `0`; all 32 attempts matched, no sentinel disclosure).
+- Full sequential validation after the repairs:
+  `p11-full-validation-nb.json` exit `0`,
+  `p10-regression-validation-nb.json` exit `0`, and
+  `config-resolution-nb.json` exit `0` (`opencode debug config`, apiKey
+  values redacted from the retained log).
+- Residual-risk wording corrected: `fs.glob` `options.cwd` is now
+  explicitly scope-checked; the "metadata oracles" claim now includes the
+  glob cwd surface and the loader-boundary statement.
+
 ## Independent Verification Record
 
 - Verifier 1 (`ses_fb1a80303ffeBMtnAooRLfSuvm`): `FAIL` — env-stripping
@@ -141,9 +291,21 @@ fourth verifier launch requires explicit user authorization.
   It also confirmed all round-4 containment probes (guard-unload, custom-env,
   fork, worker, PATH-shim, network) held, and both validation scripts plus
   `opencode debug config` returned exit `0` on re-run.
-- Three verifier attempts have failed. The producer must not self-verify; the
-- Four verifier attempts have failed. The producer must not self-verify; the
-  phase cannot pass its gate without a fresh fifth independent verifier.
+- Verifier 4 returned `FAIL` with the empirically proven `file:` URL bypass
+  (recorded above; repaired in the fifth round).
+- Verifier 5 (fresh-reviewer session `ses_facf9bb36ffeZ1Yxj7UBkOPr8J`)
+  returned `FAIL` with the three blocking and one non-blocking findings
+  recorded in the Fifth-Verifier Repair Record; all were repaired and
+  re-validated.
+- Verifier 7 (fresh-reviewer session `ses_f9d116d3bffeuT4uEMmG5QnDVL`,
+  resumed after an interruption) returned `PASS` with no blocking findings
+  and three non-blocking findings (glob `options.cwd`, module-loader
+  coverage, array glob patterns), recorded in the Seventh-Verifier Record;
+  the non-blocking findings were repaired and re-validated in round 8.
+- Six verifier attempts failed (each repaired and re-validated); the
+  seventh returned `PASS` with no blocking findings, and its non-blocking
+  findings were repaired and confirmed by the full deterministic validation
+  suite at exit `0`. The verification gate is satisfied.
 
 ## Residual Risks
 
@@ -154,7 +316,10 @@ fourth verifier launch requires explicit user authorization.
   from trusted directories, in-process native loading (`process.dlopen`,
   `.node` addons, `process.binding`), git subcommands bounded by the allowlist
   plus fail-closed protected-ref verification, and metadata oracles
-  (`existsSync`/`stat`/`access`/`watch` are now scope-checked). Remaining trust
+  (`existsSync`/`stat`/`access`/`watch` are scope-checked, and `fs.glob`
+  `options.cwd` is explicitly validated while glob patterns are exempt from
+  path checks; the CJS/ESM module loader routes through the patched public
+  fs, so `require`/`import` of host paths is denied). Remaining trust
   boundaries: native addon loading is denied wholesale (legitimate native
   dependencies cannot run in the sandbox); git-internal hook execution is
   invisible to the guard but caught fail-closed; direct `internalBinding`
@@ -166,6 +331,12 @@ fourth verifier launch requires explicit user authorization.
   signal.
 - Fixtures prove the implemented attack surface at the node API level; deeper
   syscall-level escapes are out of scope of this validation.
+- Validate-then-open TOCTOU: the guard checks the realpath, then the original
+  API opens the path; a same-process worker thread (workers are permitted)
+  could rename an in-scope symlink over the validated path between the two
+  operations so the open follows a different target. This race is inherent to
+  a JS-level guard without kernel namespaces (forbidden on this device by the
+  recorded proot incident) and is accepted as an environmental limitation.
 - Future public fs APIs not listed in `FS_PATH_ARGS` remain a maintenance risk.
 - Fixture adapters simulate implementer/reviewer contexts rather than real
   OpenCode sessions (inherited from Phase 10).
@@ -174,6 +345,10 @@ fourth verifier launch requires explicit user authorization.
 
 ## Gate
 
-Phase 11 remains `in_progress` until the authoritative checks pass and a fresh
-fifth independent verifier returns `PASS` with no blocking finding. Phase 12
-remains `pending` and must not start.
+The authoritative checks pass and a fresh independent verifier (verifier 7,
+session `ses_f9d116d3bffeuT4uEMmG5QnVL`) returned `PASS` with no blocking
+finding; its three non-blocking findings were repaired and the full
+deterministic validation suite re-ran at exit `0`. The verification gate is
+satisfied. The user (human owner) reviewed the round-8 repair evidence and
+directed completion: Phase 11 is `completed`. Phase 12 remains `pending`
+and must not start until its own phase work begins.
