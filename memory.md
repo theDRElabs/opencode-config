@@ -1,24 +1,24 @@
 
-## 2026-08-31 22:47 /root
-last: resume
+## 2026-09-05 16:37 /root
+last: i keep seeing this error when my subagents are working: "Subagent depth limit reached (1). Increase "subagent_depth" to …
 
-## 2026-08-31 22:50 /root
-last: for Gods sake, what sensitive words again?
+## 2026-09-05 16:39 /root
+last: raise it to 3 if it wont affect the speed of this device
 
-## 2026-08-31 23:10 /root
-listen skill BUILT and QA-passed: ~/.config/opencode/skills/listen/ (SKILL.md + scripts/extract.sh), data in ~/.config/opencode/listen/ (state.json + 5 idea files, 15 sessions scanned). extract.sh filters parts by time_created>since so reruns only surface new messages (live sessions keep bumping time_updated). Spec kept at listen-spec.md. brainstorm mode untested until user runs it.
+## 2026-09-05 16:44 /root
+last: add excalidraw mcp here
 
-## 2026-08-31 23:10 /root
-last: what is the progress of the phase 11 in the harness contract?
+## 2026-09-05 16:46 /root
+last: you're done?
 
-## 2026-08-31 23:13 /root
-last: i dont understand how to use this
+## 2026-09-05 16:55 /root
+last: twitter-mcp project: PRD (~/projects/twitter-mcp/docs/PRD.md) accepted after independent verification (12 findings resolved: gate protocol, outcome taxonomy, token lifecycle, blocked recovery, single-tenant, opencode primary). Backlog at docs/BACKLOG.md — 13 issues; afk: 002 scaffold, 004 MCP client, 006 shred, 007 drafts, 009 taxonomy; hitl: 001 spike, 003 auth, 005 session, 008 publish, 010 blocked, 011 email (provider UNKNOWN), 012 gate, 013 npm release. 001+002 parallel-ready. Architecture: open-source npm MCP client + closed hosted backend, X via hosted browser session (manual login, no API, TOS risk accepted).
 
-## 2026-08-31 23:28 /root
-last: are theere any uncommited changes in my repositories
+## 2026-09-05 16:58 /root
+last: accepted
 
-## 2026-08-31 23:40 /root
-listen brainstorm WORKED end-to-end (user-driven test): targeted extraction on graph-memory origin session (ses_fd5bf3853ffeX1hPoVpjqJzwss, found via part-text LIKE search — titles lie) produced 5 ideas, all 5 drafted interactively. Backlog: 10 files, 5 drafted, 5 ideas. brainstorm pattern: one idea at a time + question tool draft/must-write/skip/archive.
+## 2026-09-05 17:07 /root
+last: start from issue 1
 
-## 2026-08-31 23:33 /root
-last: commit changes in number 1, remember to not commit secrets
+## 2026-09-05 17:22 /root
+last: going forward, before installing anything, tell me the file size and ask for permissions. do not install anything withou…
