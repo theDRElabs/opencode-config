@@ -3,7 +3,7 @@ description: Run and record deterministic project feedback checks without hiding
 agent: build
 ---
 
-Use the `project-feedback` skill and `/root/.config/opencode/HARNESS-PROJECT-FEEDBACK.md`.
+Use the `project-feedback` skill and `/home/DRE/.config/opencode/HARNESS-PROJECT-FEEDBACK.md`.
 Inspect project-local instructions and scripts first. Run the requested mode
 (`fast` or `full`) sequentially, choosing only declared commands. Report every
 check with its exact command, cwd, exit code, result, and complete log/artifact

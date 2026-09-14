@@ -9,7 +9,7 @@ mkdir -p "$LOGS" "$ARTIFACTS"
 run_case() {
   name="$1"; expected="$2"; shift 2; log="$LOGS/$name.log"; started="$(date +%s)"
   set +e; "$@" >"$log" 2>&1; code=$?; set -e; finished="$(date +%s)"
-  { printf 'command='; printf '%q ' "$@"; printf '\ncwd=%s\nenvironment=node=%s; playwright=%s; chromium=%s; os=%s/%s; command-scoped assignments are recorded in command\nduration_s=%s\nexit_code=%s\nevidence=%s\n' "$ROOT" "$(node --version)" "$(node -p "require('/root/projects/lumen/node_modules/playwright/package.json').version")" "$(env PLAYWRIGHT_EXECUTABLE_PATH= node -e "process.stdout.write(require('/root/projects/lumen/node_modules/playwright').chromium.executablePath())")" "$(uname -s)" "$(uname -m)" "$((finished-started))" "$code" "$log"; } >>"$log"
+  { printf 'command='; printf '%q ' "$@"; printf '\ncwd=%s\nenvironment=node=%s; playwright=%s; chromium=%s; os=%s/%s; command-scoped assignments are recorded in command\nduration_s=%s\nexit_code=%s\nevidence=%s\n' "$ROOT" "$(node --version)" "$(node -p "require('/home/DRE/.config/opencode/node_modules/playwright/package.json').version")" "$(env PLAYWRIGHT_EXECUTABLE_PATH= node -e "process.stdout.write(require('/home/DRE/.config/opencode/node_modules/playwright').chromium.executablePath())")" "$(uname -s)" "$(uname -m)" "$((finished-started))" "$code" "$log"; } >>"$log"
   printf '%s exit=%s expected=%s cwd=%s evidence=%s\n' "$name" "$code" "$expected" "$ROOT" "$log" | tee -a "$LOGS/results.txt"
   [ "$code" -eq "$expected" ]
 }

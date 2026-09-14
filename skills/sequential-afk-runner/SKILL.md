@@ -64,13 +64,30 @@ but must not alter backlog status, run state, or invoke adapters.
 ## Issue Sandbox Isolation
 
 When adapter commands are sandboxable, wrap every implement, check, and review
-invocation in the Phase 11 issue sandbox
-(`fixtures/issue-sandbox/sandbox.mjs`): one git worktree and `sandbox/<issue-id>`
-branch per issue, a constructed whitelist environment (host secrets are never
-present), allowlist shell and git subcommand policy, protected refs
-(`main`, `production`) that cannot be mutated, denied network access, denied
-host and unrelated paths, and captured logs, diffs, commits, artifacts, and
-failure records per attempt. Kernel namespaces must not be used under proot on
-this device; isolation is process-level and policy-enforced inside the adapter
-via the guard preload. The sandbox has no merge, push, or deploy code path:
+invocation in the Phase 11 issue sandbox. Two sandbox backends are available:
+
+- **Process-level** (`fixtures/issue-sandbox/sandbox.mjs`): one git worktree
+  and `sandbox/<issue-id>` branch per issue, a constructed whitelist environment
+  (host secrets are never present), allowlist shell and git subcommand policy,
+  protected refs (`main`, `production`) that cannot be mutated, denied network
+  access, denied host and unrelated paths, and captured logs, diffs, commits,
+  artifacts, and failure records per attempt. Isolation is process-level and
+  policy-enforced inside the adapter via the guard preload (kernel namespaces
+  are not used by design).
+
+- **Docker** (`fixtures/issue-sandbox/sandbox-docker.mjs`): same interface as
+  process-level, but executes the adapter inside a Docker container
+  (`node:24-slim`) with kernel-level isolation: read-only root filesystem,
+  resource limits (512MB RAM, 1 CPU, 256 PIDs), non-root user, network
+  disabled by default. The guard preload runs inside the container as
+  defense-in-depth. Use `--network` flag to enable network for `npm install`.
+
+The sandbox has no merge, push, or deploy code path:
 those remain human-owned approval gates.
+
+To use Docker sandbox, invoke `sandbox-docker.mjs` instead of `sandbox.mjs`:
+```bash
+node fixtures/issue-sandbox/sandbox-docker.mjs \
+  --repo /path/to/repo --run-dir /path/to/run \
+  --issue ISSUE-001 --attempt 1 -- node adapter.mjs
+```

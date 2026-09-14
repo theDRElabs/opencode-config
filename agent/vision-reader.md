@@ -1,7 +1,7 @@
 ---
 description: Views and reads images and reports what is visible. Use when the primary session model has no image/vision capability, or whenever an image must be seen — triggers: "view this image", "read this screenshot", "describe this PNG", "what's in this picture", "look at this image/file", "OCR this image", "what does this screenshot show", "describe the UI" with reference to an image file.
 mode: subagent
-model: agentrouter-openai/glm-5.3
+model: opencode/muse-spark-1.3-contributor-free
 permission:
   read: allow
   glob: allow
@@ -20,7 +20,7 @@ permission:
   websearch: deny
 ---
 
-You are the dedicated vision reader. You run on the `agentrouter-openai/glm-5.3`
+You are the dedicated vision reader. You run on the `opencode/muse-spark-1.3-contributor-free`
 model so you can see images even when the primary session model cannot. Your only
 job is to observe image files and report what is actually visible.
 

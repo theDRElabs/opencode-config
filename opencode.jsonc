@@ -9,17 +9,12 @@
     },
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@0.0.79", "--headless"],
-      "enabled": true
-    },
-    "excalidraw": {
-      "type": "local",
-      "command": ["npx", "-y", "mcp-excalidraw-server"],
+      "command": ["bash", "/home/DRE/.config/opencode/playwright-win-chrome.sh"],
       "enabled": true
     }
   },
   "instructions": [
-    "/root/.config/opencode/HARNESS-CONTRACT.md"
+    "/home/DRE/.config/opencode/HARNESS-CONTRACT.md"
   ],
   "provider": {
     "anthropic": {
@@ -31,7 +26,7 @@
       "npm": "@ai-sdk/anthropic",
       "name": "AgentRouter (Anthropic)",
       "options": {
-        "baseURL": "https://agentrouter.org",
+        "baseURL": "https://agentrouter-proxy.dickelijah4.workers.dev",
         "apiKey": "{env:AGENTROUTER_API_KEY}"
       },
       "models": {
@@ -47,7 +42,7 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "AgentRouter (OpenAI Compatible)",
       "options": {
-        "baseURL": "https://agentrouter.org/v1",
+        "baseURL": "https://agentrouter-proxy.dickelijah4.workers.dev/v1",
         "apiKey": "{env:AGENTROUTER_API_KEY}"
       },
       "models": {
@@ -59,6 +54,24 @@
         },
         "glm-5.3": {
           "name": "glm-5.3"
+        },
+        "gpt-6-astra": {
+          "name": "gpt-6-astra"
+        }
+      }
+    },
+    "google": {
+      "npm": "@ai-sdk/google",
+      "name": "Google Gemini",
+      "options": {
+        "apiKey": "{env:GEMINI_API_KEY}"
+      },
+      "models": {
+        "gemini-3.6-flash": {
+          "name": "gemini-3.6-flash"
+        },
+        "gemini-3.6-flash-lite": {
+          "name": "gemini-3.6-flash-lite"
         }
       }
     },

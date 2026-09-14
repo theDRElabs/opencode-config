@@ -69,3 +69,20 @@ edges. Use `--all` for historical "what did we believe then" questions.
   values). If it won't matter next week, it doesn't belong in episodes.
 - Anything already captured verbatim by a repo's own docs — link it via an
   episode instead of duplicating content.
+
+## Episode templates
+
+Use these when recording significant work:
+
+### Decision episodes
+After any architectural choice, record: context, decision made, alternatives
+rejected, and consequences. Use `type: "DECISION"` for entities. Include
+`rationale` and `alternatives_rejected` fields in the episode JSON.
+
+### Lesson episodes
+After any bug, failure, or unexpected behavior that taught something durable,
+record: what broke, why, root cause, and what to do instead. Use
+`type: "LESSON"` for entities. Include a `lesson` field with the one-sentence
+takeaway.
+
+Both templates are documented with examples in `graph/README.md`.

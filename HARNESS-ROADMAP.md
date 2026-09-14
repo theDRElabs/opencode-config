@@ -90,9 +90,9 @@ human intent
 | 9 | Architecture Improvement | completed | architecture-audit skill |
 | 10 | Sequential AFK Runner | completed | bounded sequential orchestrator and `HARNESS-PHASE-10-VALIDATION.md` |
 | 11 | Sandboxing and Worktrees | completed | isolated execution environment |
-| 12 | Parallel Execution | in_progress | dependency-aware parallel orchestrator |
-| 13 | External Domain Skills | pending | vetted skill set and adoption record |
-| 14 | Metrics and Improvement | pending | harness metrics and tuning loop |
+| 12 | Parallel Execution | completed | dependency-aware parallel orchestrator |
+| 13 | External Domain Skills | completed | skill consolidation (26 skills, merged design, removed security-scan) |
+| 14 | Metrics and Improvement | completed | `HARNESS-METRICS.md` baseline + `scripts/collect-metrics.sh` |
 
 ## Phase 0: Current Harness Audit
 
@@ -1119,3 +1119,41 @@ dependency graph -> isolated parallel work -> independent reviews
 - Residual risks remain limited to the documented absence of live GitHub Actions,
   Vercel, and local Android toolchain execution.
 - Next phase: Phase 6, TDD and Bounded Implementer.
+
+### 2026-09-10: Server Alignment Complete
+
+- Harness migrated from Android/Termux/proot to AWS EC2 WSL2 Debian server.
+- Environment fixes: Vercel CLI installed (v59.15.1), python alias created,
+  PATH updated in .bashrc to include npm global bin.
+- Context budget audit: 26.8K tokens/session (13.4% of 200K window) — healthy.
+  Top recommendation: disable excalidraw MCP (~10K savings) — applied.
+- Playwright Chromium installed with MCP --executable-path config fix.
+- Harness phases 0-5 revalidated: all correct, no stale phone refs in active files.
+- Stale proot references fixed in sequential-afk-runner/SKILL.md, sandbox.mjs,
+  run-validation.sh, HARNESS-AUDIT.md.
+- Docker sandbox created (sandbox-docker.mjs) with process-level fallback.
+  8/8 adversarial tests pass.
+- Parallel orchestrator validated: 12/12 checks pass.
+- Graph memory updated: 30 nodes, 33 edges. Episode receipt written.
+- Pipeline verified: syntax OK, GitHub auth as theDRElabs, Vercel token present.
+- hardened-rules.js plugin: try/catch error handling added.
+- All 7 alignment sessions completed. Plan at HARNESS-SERVER-ALIGNMENT.md.
+
+### 2026-09-10: Phase 13 Completed — External Domain Skills
+
+- Skill consolidation: 28 → 26 skills.
+- Pair 1 (`nextjs-app-router-patterns` + `next-best-practices`): marked `nextjs-app-router-patterns` as `user-invocable: false` — complementary quick-ref vs deep-dive, no merge needed.
+- Pair 2 (`frontend-design` + `high-end-visual-design`): merged tactical content (anti-patterns, variance engine, haptic aesthetics, motion choreography, performance guardrails) into `frontend-design` (55 → 143 lines). Deleted `high-end-visual-design`.
+- Pair 3 (`e2e-testing` vs `tdd`): no action — both are harness-phase skills, not domain knowledge.
+- `security-scan`: removed entirely — references `.claude/` and `ecc-agentshield` (Claude Code-only tool), not adaptable for opencode.
+- Context budget updated: 26 skills, ~3,560 lines total, ~17,820 tokens domain skills.
+- Next phase: Phase 14, Metrics and Continuous Improvement.
+
+### 2026-09-10: Phase 14 Completed — Metrics and Continuous Improvement
+
+- Created `scripts/collect-metrics.sh`: runs all 8 fixture validation suites, captures pass/fail/duration/case counts, graph stats, skill stats, phase count. Outputs structured JSON or human-readable summary.
+- Created `HARNESS-METRICS.md`: baseline report with fixture results, graph memory stats, skill inventory, phase completion, context overhead.
+- **Measured improvement**: tdd-bounded fixture fixed (3/4 → 11/11 cases) by replacing `sqlite3` CLI dependency with `node:sqlite` built-in. manual-qa playwright path fixed (stale `/home/DRE/projects/lumen/` → current `/home/DRE/.config/opencode/`). Fixture pass rate: 87.5% → 96.4%.
+- Baseline: 63 cases, 62 pass, 1 known environmental failure (headless Chromium screenshot timeout).
+- Context overhead reduced from ~26.8K to ~16.8K tokens (excalidraw disabled + skill consolidation).
+- All 15 harness phases now completed. Milestone C achieved.
