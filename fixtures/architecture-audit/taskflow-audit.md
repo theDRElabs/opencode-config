@@ -6,7 +6,7 @@ that can be improved without changing current behavior or public HTTP contracts.
 
 ## Scope and Evidence Map
 
-- Root: `/root/projects/taskflow`.
+- Root: `/home/DRE/projects/taskflow`.
 - Goal: identify module-boundary and testability gaps for Phase 9.
 - Standards: current source/tests and Phase 9 human-ownership and incremental-change rules.
 - Bounded files read: `package.json`, `vitest.config.ts`, `src/lib/db.ts`,

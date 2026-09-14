@@ -2,7 +2,7 @@
 
 Date: 2026-08-24
 Scope: global OpenCode harness under `~/.config/opencode`, plus project-level
-instruction files discoverable under `/root/projects`.
+instruction files discoverable under `/home/DRE/projects`.
 Method: read-only inventory and behavior tracing. No active OpenCode configuration
 was changed during this audit.
 
@@ -233,11 +233,13 @@ instructions, skills, issue files, logs, and review artifacts.
 
 Project `AGENTS.md` files were found under:
 
-- `/root/projects/transfer/AGENTS.md`
-- `/root/projects/nobuy-scaffold/AGENTS.md`
-- `/root/projects/webland/AGENTS.md`
-- `/root/projects/data-check/AGENTS.md`
-- `/root/projects/transfer/skills/vercel-react-best-practices/AGENTS.md`
+- `/home/DRE/projects/transfer/AGENTS.md`
+- `/home/DRE/projects/data-check/AGENTS.md`
+- `/home/DRE/projects/transfer/skills/vercel-react-best-practices/AGENTS.md`
+
+Note: `nobuy-scaffold` and `webland` projects referenced in the original audit
+(2026-08-24) no longer have AGENTS.md files. Paths updated from `/root/projects`
+to `/home/DRE/projects` during server migration (2026-09-10).
 
 These project instructions may materially affect implementation and verification,
 but they are intentionally not merged into the global audit. Each target project

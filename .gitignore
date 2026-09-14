@@ -1,5 +1,7 @@
 node_modules/
 .env
 /graph/
-/listen/
-auth.json
+/auth.json
+harness-health.md
+/runs/
+/fixtures/project-feedback/node-web/dist/

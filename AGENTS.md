@@ -1,3 +1,9 @@
+# Host context
+
+This is the AWS EC2 Windows instance running WSL2 Debian (x86_64, always-on
+server, user `DRE`, home `/home/DRE`). NOT Termux/proot/Android. Phone-specific
+lessons below are historical and must not be applied here.
+
 # Communication rules (user-mandated)
 
 These rules are hard requirements set by the user. They override any
@@ -33,6 +39,20 @@ Answer the question that was asked. No preamble, no summary of what you did
 If the user explicitly asks you to do something ("fix it", "check it", "go
 through and show me"), acting is expected. Otherwise: answer, or ask.
 
+## 5. Scope of rules
+
+Communication rules (1-4) apply to conversational turns — messages where the
+user is asking, discussing, or deciding. They do NOT apply when:
+
+- The user has explicitly initiated a task ("start executing", "fix the
+  weaknesses", "build this") — in that case, act autonomously within the task
+  scope.
+- A project is being created or scaffolded and the global build pipeline
+  applies (see below) — pipeline wiring is automatic, not subject to
+  ask-before-acting.
+- A harness or workflow skill is actively running (e.g. sequential-afk-runner,
+  tdd, architecture-audit) — follow the skill's own execution model.
+
 # Global build pipeline (auto-apply)
 
 For ANY new or existing heavy project (app or site) on this device that will be
@@ -40,7 +60,7 @@ pushed to GitHub and/or deployed, wire it into the global pipeline WITHOUT the
 user asking. Use it when the project needs CI, E2E tests, or a production
 deployment. This is the default, not the exception.
 
-Pipeline = phone dev → GitHub CI (typecheck/lint/test/build) → Playwright E2E
+Pipeline = project dev → GitHub CI (typecheck/lint/test/build) → Playwright E2E
 → Vercel deploy. Reusable workflows live in `theDRElabs/pipeline`; projects just
 call them.
 
@@ -64,42 +84,51 @@ pipeline-init <project-name>
 
 ## Important environment rules (from BUILD-LESSONS.md)
 
-- Heavy builds on this phone: `NODE_OPTIONS=--max-old-space-size=1536 npm run build`.
 - Git email for GitHub pushes MUST be `144799227+theDRElabs@users.noreply.github.com`
   (personal email is blocked by GH007).
 - Verify deploys on the PRODUCTION alias domain, not the ephemeral
   `*-<hash>-*.vercel.app` URL (those are auth-protected).
 - Do not use `vercel tokens create`/`add` (403). Reuse the login token.
-- Run `pkg`/`termux-*` in Termux main env, NOT inside proot-distro.
-- Use generous timeouts; on slow phone networks installs can take 15+ min.
+- Use generous timeouts; large installs can take several minutes.
 - Private reusable workflows need the `pipeline` repo's Actions access set to
   `user` (`gh api -X PUT repos/theDRElabs/pipeline/actions/permissions/access -f access_level=user`).
 - Vercel CLI login tokens EXPIRE and are useless as a GitHub secret. Use a
   personal access token from https://vercel.com/account/settings/tokens
   (full-account scope). Set it via `gh secret set VERCEL_TOKEN` (pipe via stdin).
-- Full lessons: `~/projects/termux-setup/BUILD-LESSONS.md`.
+- Historical phone build lessons live in `~/projects/termux-setup/BUILD-LESSONS.md`.
+  They document the Termux/proot phone environment — informational only, do NOT
+  apply phone procedures (pkg, proot-distro, memory caps, Android sideloading)
+  on this server.
 
 ## Exceptions (do NOT apply the pipeline)
 
 - Tiny scripts/single-file experiments with no repo or deployment intent.
 - Projects the user explicitly keeps local-only.
 
-## Android / Gradle apps (different pipeline — do NOT run pipeline-init)
+## Android / iOS apps (pipeline-init now handles these — no manual wiring)
 
-`pipeline-init` assumes Node/Vercel and would inject npm junk into an Android
-repo. For Android apps, wire manually:
+`pipeline-init <project-name>` detects the platform (Gradle → Android,
+`project.yml`/xcodeproj → iOS, else web) and wires a **repo-local
+self-contained** `.github/workflows/ci.yml` instead of the npm pipeline:
 
-- `git init -b main` + noreply email, then a **repo-local self-contained**
-  `.github/workflows/ci.yml` that builds in CI (no local JDK/SDK exists here).
-- Proven template + known-good version matrix: copy from
-  `~/projects/data-check/.github/workflows/ci.yml` (setup-java temurin 17 +
-  gradle/actions/setup-gradle@v4 + `./gradlew assembleDebug testDebugUnitTest
-  lint --stacktrace`) and pin the versions documented in BUILD-LESSONS.md.
-- Ship APKs as Actions artifacts (`app/build/outputs/apk/debug/*.apk`);
-  debug-signed is fine for personal sideload use.
-- Known lint/compile traps (WorkManager init removal snippet, API-level guards,
-  Unit-returning setters) are catalogued in BUILD-LESSONS.md § "Android /
-  Gradle CI Lessons" — read it before scaffolding.
+- **Android** → `android-ci-template.yml`: build (`assembleDebug
+  testDebugUnitTest lint`) + a separate `ui-test` emulator job (ReactiveCircus
+  emulator-runner @v2, api-level 30, `MAESTRO_DRIVER_STARTUP_TIMEOUT`=90000,
+  `hide_error_dialogs 1`) that runs Maestro flows in `.maestro/`. APK +
+  lint results + Maestro screenshots uploaded as artifacts. No local JDK/SDK is
+  assumed; the proven version matrix lives in BUILD-LESSONS.md § "Android /
+  Gradle CI Lessons", and the `data-check` ci.yml remains the reference build.
+- **iOS** → `ios-ci-template.yml`: macOS runner, setup-xcode latest-stable,
+  XcodeGen from `project.yml`, `build-for-testing` +
+  `test-without-building` (XCUITest), then Maestro flows on the booted
+  simulator. The simulator is **resolved dynamically** (device + explicit OS
+  from `simctl`), never hardcoded — Apple renames the lineup every Xcode.
+- After CI is green, run `pipeline-bughunt <project>` to download the run's
+  artifacts and file a report + issues.
+
+`pipeline-init` no longer injects npm junk into mobile repos, and it will not
+overwrite an existing `ci.yml` (no-clobber). Known lint/compile traps
+(WorkManager init removal, API-level guards) remain in BUILD-LESSONS.md.
 
 # Graph system (graph-memory)
 

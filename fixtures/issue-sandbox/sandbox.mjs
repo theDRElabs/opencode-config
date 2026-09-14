@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 // Phase 11 issue sandbox: per-issue git worktree + branch, allowlist exec
 // policy, constructed environment, in-process guard via NODE_OPTIONS preload,
-// evidence capture, and dry run. Kernel namespaces are deliberately NOT used:
-// they corrupt the proot session on this device (incident 2026-08-29, recorded
-// in memory.md). Merge, push, and deploy have no code path here; they stay
-// human-owned.
+// evidence capture, and dry run. Kernel namespaces are not used by design;
+// isolation is process-level. Merge, push, and deploy have no code path here;
+// they stay human-owned.
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";

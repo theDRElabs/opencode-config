@@ -144,6 +144,10 @@ Each rule file contains:
 - Correct code example with explanation
 - Additional context and references
 
-## Full Compiled Document
+## Quick Reference (default)
 
-For the complete guide with all rules expanded: `AGENTS.md`
+For the condensed top-22 rules by category: `rules-CONDENSED.md`
+
+## Full Reference (on-demand)
+
+For all 72 rules expanded: `rules/` directory (read specific category files as needed).
