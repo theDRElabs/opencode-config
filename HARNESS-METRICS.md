@@ -97,7 +97,43 @@ Non-deterministic cases: none. Aggregate artifact:
 
 ---
 
+## Token & Cost Baseline: 2026-09-16
+
+`bash scripts/token-report.sh` — rollups from the opencode `session` table via
+`node:sqlite` (no `sqlite3` CLI on this host). Layers split harness-development spend
+from project-execution spend.
+
+| Layer | Sessions | Input tokens | Output tokens | Cost |
+|-------|----------|--------------|---------------|------|
+| harness_development (`~/.config/opencode`) | 0 | 0 | 0 | $0.000000 |
+| project_execution (all other dirs) | 183 | 50,071,453 | 2,315,033 | $0.019276 |
+| **Total** | **183** | **50,071,453** | **2,315,033** | **$0.019276** |
+
+Also recorded: 976,651 reasoning tokens, 303,524,922 cache-read tokens, 0
+cache-write tokens.
+
+Top agents by input+output: `build` (103 sessions, 45,565,427 in), `fresh-reviewer`
+(15), `general` (13), `explore` (12). Top directory: `/mnt/c/Users/Administrator`
+(140 sessions, 46,578,239 in).
+
+Known gap: the `harness_development` layer is empty — all 183 sessions have a
+`directory` outside the harness config dir, so harness work is currently
+indistinguishable from project work by directory alone. The optional
+`runs/ISSUE-*/attempt-*` ↔ session join was skipped because `events.jsonl` contains
+no session IDs.
+
+---
+
 ## Improvement Log
+
+### 2026-09-16: Phase 18 — Token and Cost Accounting
+
+- `scripts/token-report.sh` reports per-agent, per-directory, per-day, and top-N
+  session token/cost rollups from the real `session` table.
+- `collect-metrics.sh` history lines now carry token totals; metrics JSON exposes a
+  `tokens` object.
+- Findings recorded, not guessed: harness-development layer empty (directory is not
+  a reliable harness/project discriminator); runs↔session join unavailable.
 
 ### 2026-09-16: Phase 17 — Trials and Consistency
 

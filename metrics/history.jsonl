@@ -1,3 +1,4 @@
 {"timestamp":"2026-09-16T00:50:57Z","cases":65,"pass":65,"fail":0,"known_fail":0,"mean_score":1,"duration_s":146}
 {"timestamp":"2026-09-16T02:11:50Z","cases":65,"pass":65,"fail":0,"known_fail":0,"mean_score":1,"duration_s":72}
 {"timestamp":"2026-09-16T02:30:03Z","cases":65,"pass":65,"fail":0,"known_fail":0,"mean_score":1,"duration_s":63}
+{"timestamp":"2026-09-16T06:33:42Z","cases":65,"pass":65,"fail":0,"known_fail":0,"mean_score":1,"duration_s":170,"tokens":{"available":true,"all":{"tokens_input":50186773,"tokens_output":2323550,"tokens_reasoning":976651,"tokens_cache_read":304077606,"tokens_cache_write":0,"cost":0.019276,"sessions":183},"harness_development":{"tokens_input":0,"tokens_output":0,"tokens_reasoning":0,"tokens_cache_read":0,"tokens_cache_write":0,"cost":0,"sessions":0},"project_execution":{"tokens_input":50186773,"tokens_output":2323550,"tokens_reasoning":976651,"tokens_cache_read":304077606,"tokens_cache_write":0,"cost":0.019276,"sessions":183}}}
