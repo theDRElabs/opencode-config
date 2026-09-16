@@ -126,6 +126,21 @@ no session IDs.
 
 ## Improvement Log
 
+### 2026-09-16: Phase 20 — Real-Failure Sourcing
+
+- Intake pipeline committed: `fixtures/_intake/TEMPLATE.md` and
+  `fixtures/_intake/README.md`, plus the standing rule in `AGENTS.md` (every
+  harness incident that required a fix becomes a fixture case in the same session).
+- Backfilled 6 real-failure cases into existing suites (no new suites):
+  tdd-bounded `no-sqlite3-cli`, manual-qa `no-stale-absolute-paths`, issue-sandbox
+  `env-injection-sanitized`, sequential-afk-runner `numeric-id-ordering`,
+  project-feedback `results-contract-no-bypass` and `collectors-exclude-underscore`.
+- New baseline: 71 cases, 71 pass, 0 fail, mean_score 1.0 (~159s wall).
+  Two of the new graders were themselves false positives on first run (they matched
+  their own source text); both were repaired, which is the intake rule working.
+- Running count: 6 real-derived cases against a 20–50 target; the 65 hand-written
+  cases stay and real-derived adds on top.
+
 ### 2026-09-16: Phase 18 — Token and Cost Accounting
 
 - `scripts/token-report.sh` reports per-agent, per-directory, per-day, and top-N

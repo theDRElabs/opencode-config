@@ -46,4 +46,27 @@ run_case blocking-failure 1 ./run.sh
 CASE_CWD="$ROOT"
 run_case ambiguity-rejected 0 node ./assert-rejected.js ./ambiguous-issue.md
 
+# Backfilled from the Phase 14 incident: the SQLite CLI is absent on this host,
+# so the migration fixtures depend on the node:sqlite built-in instead
+# (HARNESS-METRICS.md, 2026-09-10). This case locks the dependency out again.
+run_case no-sqlite3-cli 0 node -e '
+const fs = require("node:fs"), path = require("node:path");
+const root = process.argv[1];
+const offenders = [];
+function walk(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) { walk(file); continue; }
+    if (entry.name === "run-validation.sh") continue;
+    if (!/\.(sh|js|mjs)$/.test(entry.name)) continue;
+    for (const line of fs.readFileSync(file, "utf8").split("\n")) {
+      if (new RegExp("\\bsqlite3\\b").test(line)) offenders.push(file + ": " + line.trim());
+    }
+  }
+}
+walk(root);
+if (offenders.length) { console.error("sqlite3 CLI dependency found:\n" + offenders.join("\n")); process.exit(1); }
+console.log("no bare sqlite3 CLI invocation in tdd-bounded scripts");
+' "$ROOT"
+
 finish_suite 'phase-6 fixture validation passed'

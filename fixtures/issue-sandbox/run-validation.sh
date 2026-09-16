@@ -69,6 +69,21 @@ fi
 
 run_case scenarios 0 node "$ROOT/test-sandbox.mjs" "$OUT"
 
+# Backfilled from the Phase 11 round-5 repairs: an allowlisted node child
+# inherited LD_PRELOAD and executed native code (HARNESS-ROADMAP.md). This case
+# locks in the loader-injection sanitization in the guard.
+run_case env-injection-sanitized 0 node -e '
+const fs = require("node:fs");
+const src = fs.readFileSync(process.argv[1], "utf8");
+const missing = [];
+if (!/LD_/.test(src)) missing.push("LD_ prefix");
+if (!/DYLD_/.test(src)) missing.push("DYLD_ prefix");
+if (!/NODE_PATH/.test(src)) missing.push("NODE_PATH");
+if (!/STRIP_ENV_RE/.test(src)) missing.push("STRIP_ENV_RE guard");
+if (missing.length) { console.error("loader-injection sanitization missing: " + missing.join(", ")); process.exit(1); }
+console.log("guard strips LD_/DYLD_/NODE_PATH loader-injection keys from child environments");
+' "$ROOT/guard-preload.cjs"
+
 if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   run_case docker-syntax 0 node --check "$ROOT/sandbox-docker.mjs"
   run_case docker-test-syntax 0 node --check "$ROOT/test-docker-sandbox.mjs"

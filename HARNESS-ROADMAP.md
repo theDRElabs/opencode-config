@@ -98,7 +98,7 @@ human intent
 | 17 | Trials and Consistency | completed | `scripts/run-trials.sh`, `metrics/trials-*.json` |
 | 18 | Token and Cost Accounting | completed | `scripts/token-report.sh`, history token totals |
 | 19 | LLM-Judge Calibration | pending | `fixtures/fresh-review/calibration/`, `scripts/calibrate-judge.sh` |
-| 20 | Real-Failure Sourcing | pending | `fixtures/_intake/`, backfilled cases |
+| 20 | Real-Failure Sourcing | completed | `fixtures/_intake/`, 6 backfilled cases |
 | 21 | Weekly Transcript Ritual | pending | `WEEKLY-REVIEW.md` |
 | 22 | Eval-of-Evals | pending | `scripts/meta-validate.sh` |
 
@@ -1015,6 +1015,93 @@ Met: trials runner passes its acceptance gate, a full `--all --n 3` baseline is
 recorded in `HARNESS-METRICS.md` at 100% consistency across all 8 suites, no case is
 non-deterministic, and metrics surfaces the consistency section when trials exist.
 
+## Phase 18: Token and Cost Accounting
+
+### Goal
+
+Measure what agent work actually costs in tokens, split into harness-development
+spend and project-execution spend, without inventing data.
+
+### Work
+
+- Added `scripts/token-report.sh` (bash + `node:sqlite`, no `sqlite3` CLI): rollups
+  from the `session` table grouped by `agent`, by `directory` (project), and by day,
+  plus the top-N sessions by input+output tokens. Human table + `--json`.
+- Two named layers: `harness_development` (sessions whose `directory` is under the
+  harness config dir) and `project_execution` (every other session).
+- Wired into `collect-metrics.sh`: `metrics/history.jsonl` lines now carry a
+  `tokens` object, and the JSON + human metrics output includes it.
+- Optional runs↔session join investigated and **skipped**: `runs/*/events.jsonl`
+  records issue/attempt/commit/verdict but no session IDs, so per-issue cost is not
+  cleanly attributable. Recorded as a finding, not guessed.
+
+### Evidence
+
+- `token-report.sh --json` → exit 0; 183 sessions, 50,071,453 input / 2,315,033
+  output / 976,651 reasoning tokens, 303,524,922 cache reads, cost `$0.019276`;
+  10 agents, 10 directories, 8 days; both layers present.
+- `collect-metrics.sh --json` → `tokens.available: true`; the appended history line
+  carries `tokens`; fixture totals unchanged (65 cases, 65 pass, mean_score 1.0).
+- Reported gap: the `harness_development` layer has **0 sessions** — every recorded
+  session ran from a non-config directory (top: `/mnt/c/Users/Administrator`, 140).
+  The script emits a warning for this rather than folding it into project spend.
+
+### Completion Gate
+
+Met: the report shows real numbers from the populated `session` table, history lines
+carry token totals going forward, and the one un-attributable join plus the empty
+harness layer are reported as findings.
+
+## Phase 20: Real-Failure Sourcing
+
+### Goal
+
+Turn real harness incidents into regression fixtures instead of hand-writing every
+case, so the suite grows from failures that actually happened.
+
+### Work
+
+- Added `fixtures/_intake/TEMPLATE.md` (source, date, symptom, minimal reproduction,
+  expected outcome, outcome-check command, original-artifact link) and
+  `fixtures/_intake/README.md` (the intake rule, the backfilled-case table, the
+  running count).
+- Added the standing rule to `AGENTS.md`: every harness incident that required a fix
+  becomes a fixture case in the same session that fixes it.
+- Backfilled 6 cases into existing suites (no new suites), each traceable to a
+  documented incident in this roadmap or `HARNESS-METRICS.md`:
+  - `tdd-bounded/no-sqlite3-cli` — Phase 14: SQLite CLI absent; graders depend on
+    `node:sqlite` only.
+  - `manual-qa/no-stale-absolute-paths` — Phase 14: a stale hardcoded project path
+    broke the browser fixture.
+  - `issue-sandbox/env-injection-sanitized` — Phase 11 round-5: loader injection
+    through an allowlisted child (`LD_PRELOAD`).
+  - `sequential-afk-runner/numeric-id-ordering` — Phase 10 follow-up: `ISSUE-2` must
+    sort before `ISSUE-10`.
+  - `project-feedback/results-contract-no-bypass` — Phase 5 repairs: static checks
+    bypassed metadata capture; every suite must emit through `_lib/run-case.sh`.
+  - `project-feedback/collectors-exclude-underscore` — Phase 15 out-of-scope fix:
+    `_lib` was scanned as a suite.
+- Every backfilled case uses the Phase 15 JSONL contract.
+
+### Evidence
+
+- `bash harness-test.sh` → exit 0, 8/8 suites, **71 cases**, 0 fail, mean_score 1.0
+  (was 65). New-case log: `/tmp/opencode/p6-validation/logs/no-sqlite3-cli.log`,
+  `/tmp/opencode/p5-validation/logs/results-contract-no-bypass.log`.
+- `collect-metrics.sh --json` → `totals.cases = 71`, all JSONL parses clean;
+  `metrics/history.jsonl` tail line records the new baseline.
+- Intake rule referenced from `AGENTS.md`; running count (6 of a 20–50 target)
+  recorded in `fixtures/_intake/README.md`.
+- The intake rule proved itself during this phase: two new graders were false
+  positives on their first run (they matched their own source text) and were
+  repaired before the gate passed.
+
+### Completion Gate
+
+Met: `harness-test.sh` passes with all new cases counted, ≥ 4 real-failure-derived
+cases exist and are traceable to documented incidents, and the intake template plus
+rule are committed with `AGENTS.md` referencing them.
+
 ## Major Milestones
 
 ### Milestone A: Reliable Manual Harness
@@ -1303,3 +1390,18 @@ dependency graph -> isolated parallel work -> independent reviews
 - Mutation check confirmed the scorer catches a removed seeded finding (0.8333 < 0.9)
   with no mutation leaking into the committed fixture.
 - Next phase: Phase 17, Trials and Consistency.
+
+### 2026-09-16: Phase 20 Completed — Real-Failure Sourcing
+
+- Added the intake pipeline: `fixtures/_intake/TEMPLATE.md`,
+  `fixtures/_intake/README.md`, and the standing rule in `AGENTS.md` (every harness
+  incident that required a fix becomes a fixture case in the same session).
+- Backfilled 6 real-failure-derived cases into existing suites, each traceable to a
+  documented incident: `tdd-bounded/no-sqlite3-cli`, `manual-qa/no-stale-absolute-paths`,
+  `issue-sandbox/env-injection-sanitized`, `sequential-afk-runner/numeric-id-ordering`,
+  `project-feedback/results-contract-no-bypass`, `project-feedback/collectors-exclude-underscore`.
+- Baseline: 71 cases, 71 pass, 0 fail, mean_score 1.0 (~159s). `harness-test.sh` exit 0,
+  8/8 suites. `collect-metrics.sh --json` totals.cases = 71; history line appended.
+- Two of the new graders were false positives on their first run (they matched their own
+  source text) and were repaired before the gate passed — the intake rule proving itself.
+- Next phase: Phase 21 (independent) or Phase 19 (HITL anchor set).

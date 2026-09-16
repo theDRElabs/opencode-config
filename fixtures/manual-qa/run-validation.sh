@@ -25,4 +25,28 @@ else
   record_known_fail evidence "$ARTIFACTS/browser-evidence.json" "evidence case skipped: browser case did not pass (known environmental failure)"
 fi
 
+# Backfilled from the Phase 14 incident: a stale hardcoded project path broke
+# the browser fixture (HARNESS-METRICS.md, 2026-09-10). Every absolute host
+# path referenced by the fixture must resolve on this machine.
+run_case no-stale-absolute-paths 0 node -e '
+const fs = require("node:fs"), path = require("node:path");
+const root = process.argv[1];
+const stale = [];
+function walk(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) { walk(file); continue; }
+    if (!/\.(js|mjs|sh|html)$/.test(entry.name)) continue;
+    const text = fs.readFileSync(file, "utf8");
+    for (const match of text.matchAll(/\/home\/DRE\/[A-Za-z0-9._\/-]*/g)) {
+      const p = match[0].replace(/[.,;:)]+$/, "");
+      if (!fs.existsSync(p)) stale.push(file + ": " + match[0]);
+    }
+  }
+}
+walk(root);
+if (stale.length) { console.error("stale absolute paths (target missing):\n" + stale.join("\n")); process.exit(1); }
+console.log("all /home/DRE absolute paths in manual-qa resolve on this machine");
+' "$ROOT"
+
 finish_suite 'phase-8 fixture validation passed'

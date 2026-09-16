@@ -71,6 +71,12 @@ templates, and the environment traps: `docs/build-pipeline.md`.
 Exceptions (do NOT apply the pipeline): tiny single-file experiments with no
 repo or deployment intent; projects the user explicitly keeps local-only.
 
+# Harness fixture intake
+
+Every harness incident that required a fix becomes a fixture case in the same
+session that fixes it. Template, rule, and running count:
+`fixtures/_intake/README.md`.
+
 # Knowledge graph (graph-memory)
 
 Persistent knowledge graph at `~/.config/opencode/graph/` (JSONL triple store
