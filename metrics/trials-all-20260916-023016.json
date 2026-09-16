@@ -1,0 +1,73 @@
+{
+  "timestamp": "20260916-023016",
+  "trials": 3,
+  "suite_count": 8,
+  "mean_consistency_pct": 100,
+  "min_consistency_pct": 100,
+  "suites": [
+    {
+      "suite": "architecture-audit",
+      "tier": "deterministic",
+      "trials": 3,
+      "case_count": 4,
+      "consistency_pct": 100,
+      "non_deterministic_cases": []
+    },
+    {
+      "suite": "fresh-review",
+      "tier": "deterministic",
+      "trials": 3,
+      "case_count": 5,
+      "consistency_pct": 100,
+      "non_deterministic_cases": []
+    },
+    {
+      "suite": "issue-sandbox",
+      "tier": "deterministic",
+      "trials": 3,
+      "case_count": 14,
+      "consistency_pct": 100,
+      "non_deterministic_cases": []
+    },
+    {
+      "suite": "manual-qa",
+      "tier": "deterministic",
+      "trials": 3,
+      "case_count": 4,
+      "consistency_pct": 100,
+      "non_deterministic_cases": []
+    },
+    {
+      "suite": "parallel-afk-runner",
+      "tier": "deterministic",
+      "trials": 3,
+      "case_count": 12,
+      "consistency_pct": 100,
+      "non_deterministic_cases": []
+    },
+    {
+      "suite": "project-feedback",
+      "tier": "deterministic",
+      "trials": 3,
+      "case_count": 11,
+      "consistency_pct": 100,
+      "non_deterministic_cases": []
+    },
+    {
+      "suite": "sequential-afk-runner",
+      "tier": "deterministic",
+      "trials": 3,
+      "case_count": 4,
+      "consistency_pct": 100,
+      "non_deterministic_cases": []
+    },
+    {
+      "suite": "tdd-bounded",
+      "tier": "deterministic",
+      "trials": 3,
+      "case_count": 11,
+      "consistency_pct": 100,
+      "non_deterministic_cases": []
+    }
+  ]
+}

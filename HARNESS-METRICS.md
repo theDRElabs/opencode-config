@@ -74,7 +74,39 @@ If it regresses it is recorded as a single `known_fail` case via
 
 ---
 
+## Trials Consistency Baseline: 2026-09-16
+
+`bash scripts/run-trials.sh --all --n 3` — every suite runs 3 times; a case × trial
+agreement matrix is built per suite. Deterministic suites expect 100%; any variance
+is an environmental flake to be investigated as an issue.
+
+| Suite | Tier | Cases | Trials | Consistency |
+|-------|------|-------|--------|-------------|
+| architecture-audit | deterministic | 4 | 3 | 100% |
+| fresh-review | deterministic | 5 | 3 | 100% |
+| issue-sandbox | deterministic | 14 | 3 | 100% |
+| manual-qa | deterministic | 4 | 3 | 100% |
+| parallel-afk-runner | deterministic | 12 | 3 | 100% |
+| project-feedback | deterministic | 11 | 3 | 100% |
+| sequential-afk-runner | deterministic | 4 | 3 | 100% |
+| tdd-bounded | deterministic | 11 | 3 | 100% |
+| **All** | — | **65** | **3** | **100% (min 100%)** |
+
+Non-deterministic cases: none. Aggregate artifact:
+`metrics/trials-all-20260916-023016.json`.
+
+---
+
 ## Improvement Log
+
+### 2026-09-16: Phase 17 — Trials and Consistency
+
+- `scripts/run-trials.sh` repeats a suite N times and builds a case × trial agreement
+  matrix. Deterministic suites expect 100%; model-dependent runs (Phase 19+) treat
+  agreement as a first-class metric.
+- Full baseline `--all --n 3`: 8/8 suites at 100% consistency, no non-deterministic
+  cases, 65 cases × 3 trials. Artifact: `metrics/trials-all-20260916-023016.json`.
+- `collect-metrics.sh` now emits a `consistency` section when trials artifacts exist.
 
 ### 2026-09-10: Phase 13 → Phase 14 transition
 
