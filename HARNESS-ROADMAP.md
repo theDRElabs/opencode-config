@@ -96,7 +96,7 @@ human intent
 | 15 | Results Contract v2 | completed | `fixtures/_lib/run-case.sh`, `metrics/history.jsonl` |
 | 16 | Partial Credit | completed | `fixtures/_lib/RESULTS-CONTRACT.md`, scored fresh-review |
 | 17 | Trials and Consistency | completed | `scripts/run-trials.sh`, `metrics/trials-*.json` |
-| 18 | Token and Cost Accounting | pending | `scripts/token-report.sh` |
+| 18 | Token and Cost Accounting | completed | `scripts/token-report.sh`, history token totals |
 | 19 | LLM-Judge Calibration | pending | `fixtures/fresh-review/calibration/`, `scripts/calibrate-judge.sh` |
 | 20 | Real-Failure Sourcing | pending | `fixtures/_intake/`, backfilled cases |
 | 21 | Weekly Transcript Ritual | pending | `WEEKLY-REVIEW.md` |

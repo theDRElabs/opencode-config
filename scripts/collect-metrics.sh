@@ -150,12 +150,46 @@ NODE
 consistency_suites=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).suites.length)" "$CONSISTENCY_FILE")
 consistency_mean=$(node -e "const j=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));const c=j.suites.map(s=>s.consistency_pct);console.log(c.length?Number((c.reduce((a,b)=>a+b,0)/c.length).toFixed(2)):null)" "$CONSISTENCY_FILE")
 
+# Token/cost rollup (Phase 18) — harness-development vs project-execution layers.
+TOKEN_FILE="$OUT_DIR/tokens.json"
+DB="${OPENCODE_DB:-$HOME/.local/share/opencode/opencode.db}"
+if [ -f "$DB" ]; then
+  node - "$DB" "$CONFIG_DIR" "$TOKEN_FILE" <<'NODE'
+const fs = require("node:fs");
+const { DatabaseSync } = require("node:sqlite");
+const [dbPath, configDir, outFile] = process.argv.slice(2);
+const db = new DatabaseSync(dbPath, { readOnly: true });
+const rows = db.prepare("SELECT directory, cost, tokens_input, tokens_output, tokens_reasoning, tokens_cache_read, tokens_cache_write FROM session").all();
+db.close();
+const sum = (rs) => rs.reduce((a, r) => {
+  a.tokens_input += Number(r.tokens_input) || 0;
+  a.tokens_output += Number(r.tokens_output) || 0;
+  a.tokens_reasoning += Number(r.tokens_reasoning) || 0;
+  a.tokens_cache_read += Number(r.tokens_cache_read) || 0;
+  a.tokens_cache_write += Number(r.tokens_cache_write) || 0;
+  a.cost += Number(r.cost) || 0;
+  return a;
+}, { tokens_input: 0, tokens_output: 0, tokens_reasoning: 0, tokens_cache_read: 0, tokens_cache_write: 0, cost: 0 });
+const withCount = (rs) => { const s = sum(rs); s.sessions = rs.length; s.cost = Number(s.cost.toFixed(6)); return s; };
+const isDev = (r) => typeof r.directory === "string" && r.directory.startsWith(configDir);
+const out = {
+  available: true,
+  all: withCount(rows),
+  harness_development: withCount(rows.filter(isDev)),
+  project_execution: withCount(rows.filter((r) => !isDev(r)))
+};
+fs.writeFileSync(outFile, JSON.stringify(out, null, 2) + "\n");
+NODE
+else
+  printf '{"available":false,"reason":"database not found: %s"}\n' "$DB" >"$TOKEN_FILE"
+fi
+
 timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 if $WRITE_HISTORY; then
-  node - "$METRICS_DIR/history.jsonl" "$timestamp" "$total_cases" "$total_pass" "$total_fail" "$total_known_fail" "$mean_score" "$total_duration" <<'NODE'
+  node - "$METRICS_DIR/history.jsonl" "$timestamp" "$total_cases" "$total_pass" "$total_fail" "$total_known_fail" "$mean_score" "$total_duration" "$TOKEN_FILE" <<'NODE'
 const fs = require("node:fs");
-const [file, timestamp, cases, pass, fail, knownFail, meanScore, duration] = process.argv.slice(2);
+const [file, timestamp, cases, pass, fail, knownFail, meanScore, duration, tokenFile] = process.argv.slice(2);
 const record = {
   timestamp,
   cases: Number(cases),
@@ -165,6 +199,9 @@ const record = {
   mean_score: Number(meanScore),
   duration_s: Number(duration)
 };
+if (tokenFile && fs.existsSync(tokenFile)) {
+  try { record.tokens = JSON.parse(fs.readFileSync(tokenFile, "utf8")); } catch {}
+}
 fs.appendFileSync(file, JSON.stringify(record) + "\n");
 NODE
 fi
@@ -187,6 +224,7 @@ const out = {
   skills: { count: $skill_count, total_lines: $skill_lines },
   phases: { completed: $phases_completed, total: $phases_total },
   consistency: JSON.parse(require("fs").readFileSync("$CONSISTENCY_FILE", "utf8")).suites,
+  tokens: JSON.parse(require("fs").readFileSync("$TOKEN_FILE", "utf8")),
   context_budget_lines: $context_lines,
   output_dir: "$OUT_DIR"
 };
@@ -206,6 +244,9 @@ else
     echo "Consistency: $consistency_suites suite(s) with trials data, mean ${consistency_mean}% (see metrics/trials-*.json)"
   else
     echo "Consistency: no trials data yet (run scripts/run-trials.sh)"
+  fi
+  if [ -f "$TOKEN_FILE" ]; then
+    echo "Tokens: $(node -e "const t=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));if(!t.available){console.log('unavailable');process.exit(0)}console.log('input='+t.all.tokens_input+' output='+t.all.tokens_output+' cost=$'+t.all.cost+' (harness_dev input='+t.harness_development.tokens_input+', project input='+t.project_execution.tokens_input+')')" "$TOKEN_FILE")"
   fi
   echo "History: $METRICS_DIR/history.jsonl"
   echo "Output: $OUT_DIR"
