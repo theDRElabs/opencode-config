@@ -1,0 +1,24 @@
+commit c42d5a0c3b849cd6c87b2bfa8798935dc156b209
+Author: DRE <144799227+theDRElabs@users.noreply.github.com>
+Date:   Thu Sep 10 13:54:21 2026 +0000
+
+    Fix defective test operand: intended 1 GB delta, wrote 1 MB
+    
+    8_000_000_000_000 - 7_999_999_000_000 = 1_000_000 (1 MB), not the
+    asserted 1_000_000_000. The TDD red phase masked this (stub returned
+    0, so failure was expected anyway). Operand corrected to match the
+    test's stated GB-range intent; production logic unchanged.
+
+diff --git a/app/src/test/java/com/drelabs/datacheck/ValidationLogicTest.kt b/app/src/test/java/com/drelabs/datacheck/ValidationLogicTest.kt
+index c835aaf..ac9b33d 100644
+--- a/app/src/test/java/com/drelabs/datacheck/ValidationLogicTest.kt
++++ b/app/src/test/java/com/drelabs/datacheck/ValidationLogicTest.kt
+@@ -25,7 +25,7 @@ class ValidationLogicTest {
+ 
+     @Test
+     fun `delta handles gb range values beyond int range`() {
+-        assertEquals(1_000_000_000L, Validation.delta(8_000_000_000_000L, 7_999_999_000_000L))
++        assertEquals(1_000_000_000L, Validation.delta(8_000_000_000_000L, 7_999_000_000_000L))
+     }
+ 
+     @Test

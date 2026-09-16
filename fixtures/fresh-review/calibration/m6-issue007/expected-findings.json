@@ -1,0 +1,31 @@
+{
+  "case": "m6-issue007",
+  "verdict": "PASS",
+  "source_review": "runs/data-check/M6/ISSUE-007/attempt-1/review.md",
+  "pending_hand_grade": true,
+  "findings": [],
+  "non_blocking_notes": [
+    {
+      "id": "NB1",
+      "severity": "medium",
+      "path": "app/src/main/java/com/drelabs/datacheck/ui/dashboard/DashboardScreen.kt",
+      "line": 293,
+      "kind": "null-sum-widened"
+    },
+    {
+      "id": "NB3",
+      "severity": "low",
+      "path": "app/src/test/java/com/drelabs/datacheck/BundleLogicTest.kt",
+      "line": 96,
+      "kind": "missing-boundary-tests"
+    },
+    {
+      "id": "NB4",
+      "severity": "low",
+      "path": "app/src/main/java/com/drelabs/datacheck/ui/settings/SettingsScreen.kt",
+      "line": 140,
+      "kind": "non-atomic-pref-commits"
+    }
+  ],
+  "scoring_note": "Historical non-blocking notes retained for reference only. The judge is an independent reviewer, so its non-blocking observations are not scored; the verdict is the scored signal for this case."
+}

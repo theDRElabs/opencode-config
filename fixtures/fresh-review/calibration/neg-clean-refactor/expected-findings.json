@@ -1,0 +1,7 @@
+{
+  "case": "neg-clean-refactor",
+  "verdict": "PASS",
+  "control": "negative",
+  "pending_hand_grade": true,
+  "findings": []
+}

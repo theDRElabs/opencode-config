@@ -1,0 +1,74 @@
+package com.drelabs.datacheck
+
+import java.io.File
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * Structural pin for ISSUE-008 (F-01): the totalsSince query must guard
+ * both SUM columns with IFNULL(..., 0).
+ *
+ * This is a STRUCTURAL test, not a behavioral one. Room's row mapping
+ * (NULL aggregate row over an empty match mapped into non-null TotalsRow
+ * Longs) cannot be executed in a JVM unit test without an in-memory
+ * database (Robolectric/room-testing), which the no-new-dependencies
+ * constraint forbids.
+ *
+ * Mechanism (source-file pin, converted from a defective reflection pin):
+ * the original version of this test read the @Query annotation via
+ * runtime reflection, but androidx.room.Query has BINARY retention - the
+ * annotation is kept in class bytecode for Room's annotation processor
+ * and is invisible to RUNTIME reflection - so getAnnotation(Query) always
+ * returned null and the test failed at the annotation-null assert before
+ * any SQL assertion could run. This pin instead reads UsageLogDao.kt as
+ * source text and asserts on the SQL string literal(s) inside the @Query
+ * block preceding `suspend fun totalsSince`. It proves the SQL as written
+ * in the source, not Room's runtime mapping; Room's annotation processor
+ * still validates the SQL syntax and table/column references at compile
+ * time in CI.
+ *
+ * Path resolution: AGP unit tests run with the module directory (app/) as
+ * the working directory, so the module-relative path is tried first, with
+ * a repo-root fallback. If no candidate exists the test fails loudly - a
+ * pin test that cannot see its subject must be red, never silently
+ * skipped.
+ */
+class UsageLogDaoSqlGuardTest {
+
+    @Test
+    fun `totalsSince guards both SUM columns with IFNULL`() {
+        val candidates = listOf(
+            File("src/main/java/com/drelabs/datacheck/data/db/UsageLogDao.kt"),
+            File("app/src/main/java/com/drelabs/datacheck/data/db/UsageLogDao.kt"),
+        )
+        val daoFile = candidates.firstOrNull { it.isFile }
+            ?: error(
+                "UsageLogDao.kt source not found - unexpected working directory " +
+                    "${System.getProperty("user.dir")}; tried " +
+                    "${candidates.joinToString("; ") { it.path }}; " +
+                    "a pin test that cannot see its subject must fail red, never silently skip",
+            )
+        val source = daoFile.readText()
+
+        val funIdx = source.indexOf("suspend fun totalsSince")
+        assertTrue("UsageLogDao.kt must declare suspend fun totalsSince", funIdx >= 0)
+        val queryIdx = source.lastIndexOf("@Query(", funIdx)
+        assertTrue("totalsSince must carry an @Query block in source", queryIdx >= 0)
+        val block = source.substring(queryIdx, funIdx)
+
+        val compact = block.lowercase().replace(Regex("\\s+"), "")
+
+        assertTrue(
+            "total column must be IFNULL(SUM(rx + tx), 0) AS total, was: ${block.trim()}",
+            compact.contains("ifnull(sum(rx+tx),0)astotal"),
+        )
+        assertTrue(
+            "fgTotal column must be IFNULL(SUM(fgRx + fgTx), 0) AS fgTotal, was: ${block.trim()}",
+            compact.contains("ifnull(sum(fgrx+fgtx),0)asfgtotal"),
+        )
+        assertTrue(
+            "query must keep targeting usage with tickStart >= :sinceMs filter, was: ${block.trim()}",
+            compact.contains("fromusagewheretickstart>=:sincems"),
+        )
+    }
+}

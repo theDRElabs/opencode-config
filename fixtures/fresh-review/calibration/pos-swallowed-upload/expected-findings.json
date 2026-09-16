@@ -1,0 +1,11 @@
+{
+  "case": "pos-swallowed-upload",
+  "verdict": "FAIL",
+  "control": "positive",
+  "pending_hand_grade": true,
+  "findings": [
+    {"id": "F1", "severity": "critical", "path": "src/upload.js", "line": 5, "kind": "swallowed-error"},
+    {"id": "F2", "severity": "high", "path": "test/upload.test.js", "line": 3, "kind": "weak-test"},
+    {"id": "F3", "severity": "medium", "path": "verification.log", "line": 8, "kind": "uncovered-regression"}
+  ]
+}
