@@ -124,6 +124,32 @@ if [[ -f "$CONFIG_DIR/HARNESS-ROADMAP.md" ]]; then
   phases_total=$(grep -cE '^\| [0-9]+ \|' "$CONFIG_DIR/HARNESS-ROADMAP.md" || true)
 fi
 
+# Trials consistency (Phase 17) — latest trials artifact per suite, if any.
+CONSISTENCY_FILE="$OUT_DIR/consistency.json"
+node - "$METRICS_DIR" "$CONSISTENCY_FILE" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+const [dir, outFile] = process.argv.slice(2);
+let files = [];
+try {
+  files = fs.readdirSync(dir).filter(f => /^trials-.*\.json$/.test(f) && !f.startsWith("trials-all-"));
+} catch {}
+const latest = {};
+for (const f of files) {
+  let j;
+  try { j = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")); } catch { continue; }
+  const prev = latest[j.suite];
+  if (!prev || String(j.timestamp) > String(prev.timestamp)) latest[j.suite] = j;
+}
+const suites = Object.values(latest).map(j => ({
+  suite: j.suite, tier: j.tier, trials: j.trials,
+  consistency_pct: j.consistency_pct, non_deterministic_cases: j.non_deterministic_cases
+}));
+fs.writeFileSync(outFile, JSON.stringify({ suites }, null, 2) + "\n");
+NODE
+consistency_suites=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).suites.length)" "$CONSISTENCY_FILE")
+consistency_mean=$(node -e "const j=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));const c=j.suites.map(s=>s.consistency_pct);console.log(c.length?Number((c.reduce((a,b)=>a+b,0)/c.length).toFixed(2)):null)" "$CONSISTENCY_FILE")
+
 timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 if $WRITE_HISTORY; then
@@ -160,6 +186,7 @@ const out = {
   graph: { nodes: $graph_nodes, edges: $graph_edges, episodes: $graph_episodes, errors: $graph_errors },
   skills: { count: $skill_count, total_lines: $skill_lines },
   phases: { completed: $phases_completed, total: $phases_total },
+  consistency: JSON.parse(require("fs").readFileSync("$CONSISTENCY_FILE", "utf8")).suites,
   context_budget_lines: $context_lines,
   output_dir: "$OUT_DIR"
 };
@@ -175,6 +202,11 @@ else
   echo "Graph: $graph_nodes nodes, $graph_edges edges, $graph_episodes episodes, $graph_errors errors"
   echo "Skills: $skill_count ($skill_lines lines)"
   echo "Phases: $phases_completed/$phases_total completed"
+  if [ "$consistency_suites" -gt 0 ]; then
+    echo "Consistency: $consistency_suites suite(s) with trials data, mean ${consistency_mean}% (see metrics/trials-*.json)"
+  else
+    echo "Consistency: no trials data yet (run scripts/run-trials.sh)"
+  fi
   echo "History: $METRICS_DIR/history.jsonl"
   echo "Output: $OUT_DIR"
 fi

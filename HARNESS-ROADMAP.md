@@ -95,7 +95,7 @@ human intent
 | 14 | Metrics and Improvement | completed | `HARNESS-METRICS.md` baseline + `scripts/collect-metrics.sh` |
 | 15 | Results Contract v2 | completed | `fixtures/_lib/run-case.sh`, `metrics/history.jsonl` |
 | 16 | Partial Credit | completed | `fixtures/_lib/RESULTS-CONTRACT.md`, scored fresh-review |
-| 17 | Trials and Consistency | pending | `scripts/run-trials.sh` |
+| 17 | Trials and Consistency | completed | `scripts/run-trials.sh`, `metrics/trials-*.json` |
 | 18 | Token and Cost Accounting | pending | `scripts/token-report.sh` |
 | 19 | LLM-Judge Calibration | pending | `fixtures/fresh-review/calibration/`, `scripts/calibrate-judge.sh` |
 | 20 | Real-Failure Sourcing | pending | `fixtures/_intake/`, backfilled cases |
@@ -978,6 +978,42 @@ document where binary is the honest answer.
 
 Met: continuum exists where honest, binary kept and justified where not, thresholds
 (not cliffs) drive pass/fail, mutation proves the scorer detects a removed finding.
+
+## Phase 17: Trials and Consistency
+
+### Goal
+
+Measure run-to-run consistency: repeat a suite N times and report per-case agreement,
+so deterministic-suite flakes are separated from model variance.
+
+### Work
+
+- Added `scripts/run-trials.sh`: `--suite <name> --n <count>` or `--all --n <count>`
+  (default n=3). Runs each suite N times in isolation, collects per-trial
+  `case-results.jsonl`, and builds a case x trial agreement matrix.
+- Two-tier interpretation is built in: the 8 current fixture suites are tagged
+  `deterministic` (100% agreement expected; any variance is an environmental flake to
+  be opened as an issue, not blamed on the "agent"); anything else is
+  `model-dependent` (agreement % is a first-class metric — Phase 19+ calibration and
+  real AFK runs).
+- Writes `metrics/trials-<suite>-<ts>.json` per suite and `metrics/trials-all-<ts>.json`
+  aggregate for `--all`.
+- `collect-metrics.sh` reads the latest trials artifact per suite and emits a
+  `consistency` section (JSON + human summary) when trials data exists.
+
+### Evidence
+
+- `run-trials.sh --suite tdd-bounded --n 3` → exit 0, 11 cases, consistency 100%.
+- `run-trials.sh --all --n 3` → exit 0, 8 suites, 65 cases each, mean 100%, min 100%,
+  no non-deterministic cases. Aggregate: `metrics/trials-all-20260916-023016.json`.
+- `collect-metrics.sh --json` → `consistency` array present with trials data; totals
+  unchanged (65 cases, 65 pass, mean_score 1.0).
+
+### Completion Gate
+
+Met: trials runner passes its acceptance gate, a full `--all --n 3` baseline is
+recorded in `HARNESS-METRICS.md` at 100% consistency across all 8 suites, no case is
+non-deterministic, and metrics surfaces the consistency section when trials exist.
 
 ## Major Milestones
 
