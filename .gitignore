@@ -3,5 +3,12 @@ node_modules/
 /graph/
 /auth.json
 harness-health.md
-/runs/
+# Ignore run transcripts, but keep the durable review record and the event log.
+/runs/*
+!/runs/**/
+/runs/**/*
+!/runs/**/
+!/runs/**/review.md
+!/runs/**/events.jsonl
+!/runs/.last-weekly-review
 /fixtures/project-feedback/node-web/dist/

@@ -1405,3 +1405,32 @@ dependency graph -> isolated parallel work -> independent reviews
 - Two of the new graders were false positives on their first run (they matched their own
   source text) and were repaired before the gate passed — the intake rule proving itself.
 - Next phase: Phase 21 (independent) or Phase 19 (HITL anchor set).
+
+### 2026-09-16: Phase 21 Completed — Weekly Transcript-Reading Ritual
+
+- Added `WEEKLY-REVIEW.md` (cadence, inputs in priority order, what to look for,
+  required audit line, known limits) and the `commands/weekly-review.md` stub that
+  opens the checklist and prints the week's new runs.
+- Added the marker `runs/.last-weekly-review` (touch-dated 2026-09-10) so the stub's
+  `find runs/ -newer` resolves; it currently lists 34 files.
+- Logged the first "dry-run" review entry in `HARNESS-METRICS.md` over
+  `runs/data-check/M6`. Read at depth: `events.jsonl` and ISSUE-008's `review.md`
+  (69 lines) in full; the first 30 lines only of the other six `review.md`
+  (65–147 lines each). Supporting files not read. Findings: defective-test
+  mechanism masked by the red phase (2 incidents), reviewer contexts lacking
+  shell/file-write (5 of 7 reviews), red-first proven only statically for the
+  corrected ISSUE-008 pin, recurring token-attribution gap, and a reusable
+  source-file pin pattern to promote.
+- Discovered while wiring the marker: `/runs/` was git-ignored (`.gitignore:6`). User
+  decision: keep the durable record versioned. `.gitignore` now negates
+  `runs/**/review.md`, `runs/**/events.jsonl`, and `runs/.last-weekly-review`; the
+  other transcript files stay ignored. `WEEKLY-REVIEW.md` known limits updated.
+- Handed 2 fixture-case proposals to the Phase 20 intake pipeline; no fixture cases
+  were created in this phase (the deliverable is the ritual artifact + dry-run entry).
+  `metrics/history.jsonl` intentionally not appended (its contract is one line per
+  `collect-metrics.sh` run, and none ran here).
+- Bookkeeping note: this is the first phase committed without re-running the fixture
+  suite — `collect-metrics.sh` spends ~159s and the phase touches no suite, so the
+  71-case baseline from Phase 20 stands. If the reviewer requires fresh evidence, run
+  `harness-test.sh` before accepting.
+- Next phase: Phase 19 (HITL anchor set) or Phase 22 (needs 19).

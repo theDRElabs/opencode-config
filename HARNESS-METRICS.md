@@ -126,6 +126,68 @@ no session IDs.
 
 ## Improvement Log
 
+### 2026-09-16: Phase 21 — Weekly Transcript-Reading Ritual (logged dry-run review)
+
+- Added `WEEKLY-REVIEW.md` (cadence, inputs in priority order, what to look for,
+  required log format, known limits), `commands/weekly-review.md`, and the marker
+  `runs/.last-weekly-review`.
+- **Dry-run review performed over `runs/data-check/M6`** as the first real instance.
+  The last-review marker matched 34 files (33 across the 7 `ISSUE-*/attempt-1`
+  bundles plus the milestone `events.jsonl`). What was actually read this session:
+  the milestone `events.jsonl` in full; ISSUE-008's `review.md` in full (69 lines,
+  head + tail regions overlapping); the first 30 lines only of the other six
+  `review.md` (ISSUE-001 65L, 002 147L, 003 106L, 004 73L, 006 141L, 007 70L);
+  and targeted regions of ISSUE-008's `phase2-result.md`. The `issue.md`,
+  `input-manifest.md`, `implementation-result.md`, and the other `phase*-result.md`
+  files were not read. That gap is the honest limit of this dry run and is itself a
+  finding: one milestone's worth of transcripts does not fit a 30–60 min budget when
+  read at depth.
+
+Findings:
+
+1. **Defective-test mechanism masked by the red phase (medium; 2 occurrences).**
+   ISSUE-002: the phase-1 test wrote `7_999_999_000_000L` but asserted
+   `1_000_000_000L`, and the red phase masked it because the stub returned 0
+   (`events.jsonl` `test-defect-fixed`, 13:54). ISSUE-008: the pin test read
+   `androidx.room.Query` by runtime reflection, which has BINARY retention, so red and
+   green both failed at the same `assertNotNull` and the phase-1 red was misattributed
+   (`events.jsonl` `green-failed-test-defect`, 17:20; confirmed in the ISSUE-008
+   review). `run_case` asserts exit-code equality only, which is why both slipped
+   through.
+   → **Proposed fixture case** (feeds Phase 20): a tdd-bounded case asserting that a
+   red run fails *at the intended assertion*, not merely non-zero.
+2. **Reviewer contexts without shell or file-write (medium; 5 of 7 reviews).**
+   ISSUE-001, 002, 006, 007, and 008 reviews disclose no shell and no file-write tool,
+   so `git diff` / `git show` and CI re-execution were impossible; ISSUE-001/002/003
+   could not be written to their requested path and were persisted verbatim by the
+   orchestrator. Same task, different constraint set across attempts — an unfair
+   comparison.
+   → **Proposed fixture case** (feeds Phase 20): assert the review protocol declares
+   tool availability up front, or that a missing shell is recorded rather than
+   silently narrowing the evidence.
+3. **Red-first proven only statically for the corrected mechanism (ISSUE-008).** The
+   corrected source-file pin was committed after the SQL fix, so its red was never
+   CI-executed; discriminating power was argued statically. Disclosed honestly in the
+   review — an evidence gap, not a hidden one.
+4. **Token attribution still unresolved (recurring; already logged in Phase 18).**
+   `token-report.sh` today: 185 sessions, 51,245,716 input / 2,392,258 output tokens;
+   `build` alone 105 sessions / 46,739,690 input. The `harness_development` layer is
+   0 sessions, and `events.jsonl` has no session IDs, so per-issue cost remains
+   unattributable. Recurrence noted, not re-opened.
+5. **New successful pattern to promote: the source-file structural pin.** ISSUE-008's
+   conversion from runtime annotation reflection to reading the DAO source and
+   asserting normalized SQL substrings is reusable for pinning SQL that reflection
+   cannot see (BINARY retention). Candidate for the tdd-bounded skill notes.
+
+No fixture cases were created in this phase — the deliverable is the ritual artifact
+plus this dry-run entry; the two proposals above are handed to the Phase 20 intake
+pipeline. `metrics/history.jsonl` was not appended: its contract (Phase 15) is one
+line per `collect-metrics.sh` run, and no fixture collection ran in this phase.
+
+```
+review: date=2026-09-16 transcripts_read=8(2 full, 6 head-30 only) findings=5 cases_created=0 proposed=2
+```
+
 ### 2026-09-16: Phase 20 — Real-Failure Sourcing
 
 - Intake pipeline committed: `fixtures/_intake/TEMPLATE.md` and
