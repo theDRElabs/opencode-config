@@ -266,3 +266,28 @@ review: date=2026-09-16 transcripts_read=8(2 full, 6 head-30 only) findings=5 ca
 | Skill count/lines | `collect-metrics.sh` | After skill changes |
 | Phase completion | Roadmap | After each phase |
 | Context overhead | Context budget doc | After config changes |
+
+### 2026-09-16: Phase 19 — LLM-Judge Calibration Baseline
+
+Judge: `xkiro/deepseek/deepseek-v4-flash`. Corpus: 13 cases
+(`fixtures/fresh-review/calibration/`). Artifact:
+`metrics/judge-calibration-20260916-103327.json`.
+
+| Metric | Value | Target |
+|--------|-------|--------|
+| verdict_match_rate | 0.846 | — |
+| mean_recall | 0.583 | >= 0.85 |
+| mean_precision | 0.583 | >= 0.75 |
+| unknown_rate | 0.154 | < 0.10 |
+| ambiguous_unknown_rate | 1.00 | 1.00 |
+
+This is the first honest calibration run, so the numbers are below target and
+are reported as measured. Two instrument defects were fixed before this run
+(real-case `source/` path prefix; PASS-case findings scored against another
+reviewer's non-blocking notes). Recall and precision are unstable across runs
+because the judge varies how many findings it lists. Known weaknesses: false
+FAILs on clean no-op controls (2 of 3; which one flips is non-deterministic),
+and `verification.log:8:uncovered-regression` missed on every FAIL-expected
+case. One ground truth correction came out of the HITL gate: `m6-issue008`
+was PASS in the historical review but is FAIL for the bundled case (AC5's
+CI-green evidence is not in the bundle).

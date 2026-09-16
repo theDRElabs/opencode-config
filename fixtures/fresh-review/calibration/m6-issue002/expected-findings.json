@@ -1,0 +1,24 @@
+{
+  "case": "m6-issue002",
+  "verdict": "PASS",
+  "source_review": "runs/data-check/M6/ISSUE-002/attempt-1/review.md",
+  "pending_hand_grade": true,
+  "findings": [],
+  "non_blocking_notes": [
+    {
+      "id": "NB1",
+      "severity": "low",
+      "path": "app/src/test/java/com/drelabs/datacheck/ValidationLogicTest.kt",
+      "line": 28,
+      "kind": "defective-test-operand"
+    },
+    {
+      "id": "NB2",
+      "severity": "low",
+      "path": "app/src/main/java/com/drelabs/datacheck/data/SamplingEngine.kt",
+      "line": 70,
+      "kind": "untested-window-math"
+    }
+  ],
+  "scoring_note": "Historical non-blocking notes retained for reference only. The judge is an independent reviewer, so its non-blocking observations are not scored; the verdict is the scored signal for this case."
+}

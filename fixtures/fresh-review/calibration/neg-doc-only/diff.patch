@@ -1,0 +1,11 @@
+diff --git a/README.md b/README.md
+@@
+-## Install
++## Installation
+@@
+-Run `npm install`.
++Run `npm install` to fetch the dependencies.
+diff --git a/src/format.js b/src/format.js
+@@
++// Formats a non-negative byte count into B, KB, or MB.
+ export function formatBytes(bytes) {

@@ -1,0 +1,9 @@
+command=node --test
+cwd=/fixture
+environment=inherited
+duration_s=0
+exit_code=0
+result=PASS
+evidence=verification.log
+note=Clamp tests pass for spans longer and shorter than 12h. The locked clamp
+value is recorded in the product decision log, which is not part of this bundle.

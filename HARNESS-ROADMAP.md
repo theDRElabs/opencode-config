@@ -1434,3 +1434,39 @@ dependency graph -> isolated parallel work -> independent reviews
   71-case baseline from Phase 20 stands. If the reviewer requires fresh evidence, run
   `harness-test.sh` before accepting.
 - Next phase: Phase 19 (HITL anchor set) or Phase 22 (needs 19).
+
+### 2026-09-16: Phase 19 Completed (AFK half) — LLM-Judge Calibration
+
+- Built `fixtures/fresh-review/calibration/` — 13 cases: 5 real M6 reviews
+  (ISSUE-001/002/006/007/008), the seeded review fixture, 3 negative controls
+  (clean refactor, doc-only, test-addition), 2 positive controls (missing
+  validation, swallowed error), 2 unknown-verdict cases (locked clamp value
+  absent from the bundle; external client contract absent from the bundle).
+  Every case carries `expected-findings.json`.
+- Added the judge protocol to `skills/fresh-context-review/SKILL.md`: version
+  stamp section, `UNKNOWN` escape ("never fabricate a verdict"), one dimension
+  per invocation.
+- New `scripts/calibrate-judge.sh` runs the judge over the corpus and writes
+  `metrics/judge-calibration-<ts>.json` with recall/precision/unknown-rate plus
+  a per-case disagreement list. The judge protocol is injected via the prompt
+  because `fresh-reviewer` is declared `mode: subagent` and
+  `opencode run --agent <subagent>` silently falls back to the default agent.
+- Two instrument defects found and fixed before the final measurement:
+  (1) the real M6 cases nested post-change files under `source/`, so judge
+  citations and ground-truth paths never matched; (2) expected-PASS cases were
+  being scored against another reviewer's non-blocking note list — those notes
+  moved to `non_blocking_notes` and the verdict is the scored signal there.
+- HITL gate: user hand-graded the three open verdicts. Decision: `m6-issue008`
+  ground truth corrected PASS→FAIL (the historical PASS relied on an
+  out-of-band CI-green verification that is absent from the packaged bundle,
+  so AC5 is unverified for the case as bundled); the two negative controls that
+  drew FAILs are judge errors and ground truth is unchanged.
+- Final measurement (13 cases, `xkiro/deepseek/deepseek-v4-flash`):
+  verdict_match 0.846, mean_recall 0.583, mean_precision 0.583, unknown_rate
+  0.154, ambiguous_unknown_rate 1.00. Recall and precision are below the plan
+  targets (>= 0.85 / >= 0.75). Reported as measured; the plan forbids tuning
+  in the same run that measures. Known weaknesses: false FAILs on clean no-op
+  controls (2 of 3, and which one flips is unstable across runs), and a
+  recurring miss of `verification.log:8:uncovered-regression` on all three
+  FAIL-expected cases.
+- Next phase: Phase 22 (eval-of-evals; depends on 19).

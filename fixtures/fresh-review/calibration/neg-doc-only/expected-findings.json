@@ -1,0 +1,7 @@
+{
+  "case": "neg-doc-only",
+  "verdict": "PASS",
+  "control": "negative",
+  "pending_hand_grade": true,
+  "findings": []
+}

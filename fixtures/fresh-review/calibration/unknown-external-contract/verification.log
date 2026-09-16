@@ -1,0 +1,10 @@
+command=npm test
+cwd=/fixture
+environment=inherited
+duration_s=0
+exit_code=0
+result=PASS
+evidence=verification.log
+note=The suite mocks the repository and asserts the options object is forwarded.
+The mock does not implement `mode`, so the partial-update path is not exercised
+against the real client.

@@ -1,0 +1,7 @@
+diff --git a/src/profile.js b/src/profile.js
+@@
+ export async function updateProfile(request, repository) {
+-  const profile = await repository.update(request.body);
++  const profile = await repository.update(request.body, { mode: 'patch' });
+   return { status: 200, body: profile };
+ }

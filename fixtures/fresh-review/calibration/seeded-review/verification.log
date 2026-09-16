@@ -1,0 +1,8 @@
+command=npm test
+cwd=/fixture
+environment=inherited
+duration_s=0
+exit_code=0
+result=PASS
+evidence=verification.log
+note=Only the happy-path test ran; auth and repository failure paths were not exercised.
