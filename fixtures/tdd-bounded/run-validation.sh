@@ -1,32 +1,15 @@
 #!/usr/bin/env bash
 set -u
-
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 WORK="/tmp/opencode/p6-validation"
 LOGS="$WORK/logs"
 rm -rf "$WORK"
 mkdir -p "$LOGS"
 
-run_case() {
-  name="$1"
-  expected="$2"
-  case_cwd="$3"
-  shift 3
-  log="$LOGS/$name.log"
-  started="$(date +%s)"
-  set +e
-  (cd "$case_cwd" && "$@") >"$log" 2>&1
-  code=$?
-  set -e
-  finished="$(date +%s)"
-  duration=$((finished - started))
-  {
-    printf 'command='; printf '%q ' "$@"
-    printf '\ncwd=%s\nenvironment=inherited; command-scoped assignments are recorded in command\nduration_s=%s\nexit_code=%s\nevidence=%s\n' "$case_cwd" "$duration" "$code" "$log"
-  } >>"$log"
-  printf '%s exit=%s expected=%s cwd=%s duration_s=%s evidence=%s\n' "$name" "$code" "$expected" "$case_cwd" "$duration" "$log" | tee -a "$LOGS/results.txt"
-  [ "$code" -eq "$expected" ]
-}
+SUITE_NAME="tdd-bounded"
+CASE_LOGS="$LOGS"
+CASE_RESULTS="${CASE_RESULTS:-$LOGS/case-results.jsonl}"
+. "$ROOT/../_lib/run-case.sh"
 
 copy_fixture() {
   target="$1"
@@ -37,25 +20,30 @@ copy_fixture() {
 
 set -e
 copy_fixture "$WORK/domain"
-run_case domain-red 1 "$WORK/domain" ./run-red.sh
-run_case domain-green 0 "$WORK/domain" ./run-green.sh
-run_case domain-refactor 0 "$WORK/domain" ./run-refactor.sh
+CASE_CWD="$WORK/domain"
+run_case domain-red 1 ./run-red.sh
+run_case domain-green 0 ./run-green.sh
+run_case domain-refactor 0 ./run-refactor.sh
 
 rm -rf "$WORK/migration"
 cp -R "$ROOT/migration" "$WORK/migration"
 chmod +x "$WORK/migration"/*.sh
-run_case migration-red 1 "$WORK/migration" ./run-red.sh
-run_case migration-green 0 "$WORK/migration" ./run-green.sh
-run_case migration-refactor 0 "$WORK/migration" ./run-refactor.sh
+CASE_CWD="$WORK/migration"
+run_case migration-red 1 ./run-red.sh
+run_case migration-green 0 ./run-green.sh
+run_case migration-refactor 0 ./run-refactor.sh
 
 rm -rf "$WORK/bug-fix"
 cp -R "$ROOT/bug-fix" "$WORK/bug-fix"
 chmod +x "$WORK/bug-fix"/run-*.sh
-run_case bug-fix-red 1 "$WORK/bug-fix" ./run-red.sh
-run_case bug-fix-green 0 "$WORK/bug-fix" ./run-green.sh
-run_case bug-fix-refactor 0 "$WORK/bug-fix" ./run-refactor.sh
+CASE_CWD="$WORK/bug-fix"
+run_case bug-fix-red 1 ./run-red.sh
+run_case bug-fix-green 0 ./run-green.sh
+run_case bug-fix-refactor 0 ./run-refactor.sh
 
-run_case blocking-failure 1 "$ROOT/blocking-failure" ./run.sh
-run_case ambiguity-rejected 0 "$ROOT" node ./assert-rejected.js ./ambiguous-issue.md
+CASE_CWD="$ROOT/blocking-failure"
+run_case blocking-failure 1 ./run.sh
+CASE_CWD="$ROOT"
+run_case ambiguity-rejected 0 node ./assert-rejected.js ./ambiguous-issue.md
 
-printf 'phase-6 fixture validation passed\n' | tee -a "$LOGS/results.txt"
+finish_suite 'phase-6 fixture validation passed'
