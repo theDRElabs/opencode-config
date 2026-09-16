@@ -97,9 +97,9 @@ human intent
 | 16 | Partial Credit | completed | `fixtures/_lib/RESULTS-CONTRACT.md`, scored fresh-review |
 | 17 | Trials and Consistency | completed | `scripts/run-trials.sh`, `metrics/trials-*.json` |
 | 18 | Token and Cost Accounting | completed | `scripts/token-report.sh`, history token totals |
-| 19 | LLM-Judge Calibration | pending | `fixtures/fresh-review/calibration/`, `scripts/calibrate-judge.sh` |
+| 19 | LLM-Judge Calibration | completed | `fixtures/fresh-review/calibration/`, `scripts/calibrate-judge.sh` |
 | 20 | Real-Failure Sourcing | completed | `fixtures/_intake/`, 6 backfilled cases |
-| 21 | Weekly Transcript Ritual | pending | `WEEKLY-REVIEW.md` |
+| 21 | Weekly Transcript Ritual | completed | `WEEKLY-REVIEW.md` |
 | 22 | Eval-of-Evals | pending | `scripts/meta-validate.sh` |
 
 ## Phase 0: Current Harness Audit
