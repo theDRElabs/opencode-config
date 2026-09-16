@@ -93,6 +93,14 @@ human intent
 | 12 | Parallel Execution | completed | dependency-aware parallel orchestrator |
 | 13 | External Domain Skills | completed | skill consolidation (26 skills, merged design, removed security-scan) |
 | 14 | Metrics and Improvement | completed | `HARNESS-METRICS.md` baseline + `scripts/collect-metrics.sh` |
+| 15 | Results Contract v2 | completed | `fixtures/_lib/run-case.sh`, `metrics/history.jsonl` |
+| 16 | Partial Credit | completed | `fixtures/_lib/RESULTS-CONTRACT.md`, scored fresh-review |
+| 17 | Trials and Consistency | pending | `scripts/run-trials.sh` |
+| 18 | Token and Cost Accounting | pending | `scripts/token-report.sh` |
+| 19 | LLM-Judge Calibration | pending | `fixtures/fresh-review/calibration/`, `scripts/calibrate-judge.sh` |
+| 20 | Real-Failure Sourcing | pending | `fixtures/_intake/`, backfilled cases |
+| 21 | Weekly Transcript Ritual | pending | `WEEKLY-REVIEW.md` |
+| 22 | Eval-of-Evals | pending | `scripts/meta-validate.sh` |
 
 ## Phase 0: Current Harness Audit
 
@@ -888,6 +896,89 @@ agent activity.
 Metrics are collected without exposing secrets or creating excessive overhead, and at
 least one measured workflow improvement is validated against before/after evidence.
 
+## Phase 15: Results Contract v2 + Persistent Metrics History
+
+### Goal
+
+Make per-case results machine-readable and persistent so later phases build on a
+single scored-results primitive instead of fragile log grepping.
+
+### Work
+
+- Added `fixtures/_lib/run-case.sh`: shared case runner + JSONL emitter. Every
+  suite sources it; the copy-pasted `run_case` pattern is gone.
+- All 8 `fixtures/*/run-validation.sh` emit one JSON line per case to
+  `case-results.jsonl` (`suite`, `case`, `expected`, `actual`, `score`, `status`,
+  `duration_s`, `evidence`, `known_fail`, `timestamp`). Phase 15 keeps `score` binary.
+- Rewrote `scripts/collect-metrics.sh` to parse `case-results.jsonl` with `node`
+  (not `grep`), report per-suite `mean_score`, and append a summary line to
+  `metrics/history.jsonl` (in-repo, committed). `--no-history` skips the append.
+- Updated `harness-test.sh` to consume the same JSONL: per-case counts, known-fail
+  column, mean score. Known-fail cases no longer fail the suite.
+- manual-qa records `KNOWN_FAIL_CASES=browser`; a failed browser case records a
+  single known-fail case and skips the dependent evidence case rather than
+  corrupting the suite.
+
+### Out-of-scope fixes required by the baseline gate
+
+- `project-feedback/android-rejected` was stale: `pipeline-init.sh` now handles
+  Android (repo-local CI), so the old "exit 2 reject" assertion walked past
+  detection and died at git setup (exit 128). Replaced with `android-eligible`
+  (exit 0), `android-no-clobber` (exit 2 when ci.yml exists) and an updated
+  `android-isolation` check.
+- `_lib` was being scanned as a suite; both collectors now exclude `_*` dirs.
+
+### Evidence
+
+- `bash harness-test.sh` → exit 0, 8/8 suites pass.
+- `collect-metrics.sh --json` → `totals.mean_score = 1`, 65 cases (≥ 63 baseline).
+- `metrics/history.jsonl` → non-empty.
+- Every suite's `case-results.jsonl` parses with `JSON.parse`, no exceptions.
+
+### Completion Gate
+
+Met: harness-test passes, `mean_score` present, history persisted, case count at or
+above baseline, manual-qa known failure isolated as a single case.
+
+## Phase 16: Partial Credit
+
+### Goal
+
+Replace binary pass/fail with a scored continuum where one genuinely exists, and
+document where binary is the honest answer.
+
+### Work
+
+- Wrote `fixtures/_lib/RESULTS-CONTRACT.md`: record shape, field semantics, score
+  semantics, the per-suite scored/binary table with reasons, and known-fail policy.
+- Extended `fixtures/_lib/run-case.sh` with `run_scored_case <name> <threshold>
+  <grader...>`. The grader writes `{"score": <0..1>, ...}` to `$SCORE_FILE`;
+  a missing/unparseable file scores 0.0. Records carry `threshold`.
+- `fresh-review` is now scored (threshold `0.9`): `assert-review.js` matches
+  detected findings against `expected-findings.json` on `path+kind`, computes
+  `score = recall`, and writes recall/precision/matched/expected/missing/spurious
+  to `$SCORE_FILE`. Five of six real issues now scores 0.8333 and fails the
+  threshold instead of being indistinguishable from zero recall.
+- Kept the other seven suites binary and documented why in RESULTS-CONTRACT.md.
+  `project-feedback` is explicitly binary: each case injects one defect, so
+  per-check partial output would be a different case, not half a case.
+- `emit_case_result`/`emit_scored_result` both stamp `threshold`; suite score is
+  the mean of case scores, already surfaced by `collect-metrics.sh`.
+
+### Evidence
+
+- `bash harness-test.sh` → exit 0, 8/8 suites, 65 cases, 0 fail.
+- `collect-metrics.sh --json` → every suite `mean_score: 1`, `fresh-review` scored.
+- `metrics/history.jsonl` tail line carries `mean_score: 1`.
+- Mutation check: emptying `src/unrelated.js` in a `/tmp` copy removes seeded F5 →
+  grader emits `score 0.8333, recall 0.8333, matched 5/6, missing F5` and the suite
+  fails its 0.9 threshold. Real fixture verified unchanged with `md5sum -c` after.
+
+### Completion Gate
+
+Met: continuum exists where honest, binary kept and justified where not, thresholds
+(not cliffs) drive pass/fail, mutation proves the scorer detects a removed finding.
+
 ## Major Milestones
 
 ### Milestone A: Reliable Manual Harness
@@ -1157,3 +1248,22 @@ dependency graph -> isolated parallel work -> independent reviews
 - Baseline: 63 cases, 62 pass, 1 known environmental failure (headless Chromium screenshot timeout).
 - Context overhead reduced from ~26.8K to ~16.8K tokens (excalidraw disabled + skill consolidation).
 - All 15 harness phases now completed. Milestone C achieved.
+
+### 2026-09-16: Phase 15 Completed — Results Contract v2 + Persistent Metrics History
+
+- New shared lib `fixtures/_lib/run-case.sh`; all 8 suites emit per-case JSONL.
+- `collect-metrics.sh` parses JSONL via node, reports `mean_score`, writes
+  `metrics/history.jsonl` in-repo; `harness-test.sh` consumes the same records.
+- Fixture baseline is now 65 cases / 65 pass / 0 fail (was 63/62/1). manual-qa
+  screenshot case now passes; project-feedback android case was stale and fixed.
+- Next phase: Phase 16, Partial Credit.
+
+### 2026-09-16: Phase 16 Completed — Partial Credit
+
+- Added `run_scored_case` to the shared lib and `fixtures/_lib/RESULTS-CONTRACT.md`
+  documenting score semantics and which suites are scored vs binary.
+- `fresh-review` now scores recall against `expected-findings.json` (threshold 0.9);
+  the other seven suites stay binary with documented reasons.
+- Mutation check confirmed the scorer catches a removed seeded finding (0.8333 < 0.9)
+  with no mutation leaking into the committed fixture.
+- Next phase: Phase 17, Trials and Consistency.

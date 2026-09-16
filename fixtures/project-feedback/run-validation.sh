@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -u
-
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 WORK="/tmp/opencode/p5-validation"
 LOGS="$WORK/logs"
@@ -11,25 +10,10 @@ PIPELINE_INIT="/home/DRE/projects/pipeline/pipeline-init.sh"
 rm -rf "$WORK"
 mkdir -p "$LOGS"
 
-run_case() {
-  name="$1"
-  expected="$2"
-  shift 2
-  log="$LOGS/$name.log"
-  started="$(date +%s)"
-  set +e
-  "$@" >"$log" 2>&1
-  code=$?
-  set -e
-  finished="$(date +%s)"
-  duration=$((finished - started))
-  printf '%s exit=%s expected=%s cwd=%s duration_s=%s evidence=%s\n' "$name" "$code" "$expected" "$PWD" "$duration" "$log" | tee -a "$LOGS/results.txt"
-  printf 'command=%q ' "$@" >>"$log"
-  printf '\ncwd=%s\nenvironment=inherited; command-scoped assignments are recorded in command\nduration_s=%s\nexit_code=%s\nevidence=%s\n' "$PWD" "$duration" "$code" "$log" >>"$log"
-  if [ "$code" -ne "$expected" ]; then
-    return 1
-  fi
-}
+SUITE_NAME="project-feedback"
+CASE_LOGS="$LOGS"
+CASE_RESULTS="${CASE_RESULTS:-$LOGS/case-results.jsonl}"
+. "$ROOT/../_lib/run-case.sh"
 
 copy_web() {
   target="$1"
@@ -66,9 +50,17 @@ run_case ineligible-tiny 3 bash -c "cd '$WORK/ineligible-tiny' && '$PIPELINE_INI
 
 rm -rf "$WORK/android-project"
 cp -R "$ANDROID" "$WORK/android-project"
-mkdir -p "$WORK/android-project/.git"
-run_case android-rejected 2 bash -c "cd '$WORK/android-project' && '$PIPELINE_INIT' android-project"
-run_case android-isolation 0 bash -c "if [ -e '$WORK/android-project/package.json' ] || [ -e '$WORK/android-project/.github/workflows/pipeline.yml' ]; then echo 'android isolation failure: Node/Vercel files created'; exit 1; fi; echo 'android isolation passed: no package.json or pipeline.yml'"
+(
+  cd "$WORK/android-project"
+  git init -q -b main .
+  git config user.email v@v
+  git config user.name v
+  mkdir -p .github/workflows
+  echo "existing ci" > .github/workflows/ci.yml
+) >"$LOGS/android-setup.log" 2>&1
+run_case android-eligible 0 bash -c "cd '$WORK/android-project' && '$PIPELINE_INIT' android-project --check-only"
+run_case android-no-clobber 2 bash -c "cd '$WORK/android-project' && '$PIPELINE_INIT' android-project"
+run_case android-isolation 0 bash -c "if [ -e '$WORK/android-project/package.json' ] || [ -e '$WORK/android-project/.github/workflows/pipeline.yml' ]; then echo 'android isolation failure: Node/Vercel files created'; exit 1; fi; if [ \"\$(cat '$WORK/android-project/.github/workflows/ci.yml')\" != 'existing ci' ]; then echo 'android no-clobber failure: existing ci.yml was modified'; exit 1; fi; echo 'android isolation passed: no package.json, no pipeline.yml, existing ci.yml preserved'"
 
 run_case pipeline-static 0 node -e '
 const fs = require("node:fs");
@@ -86,4 +78,4 @@ if (source.includes("continue-on-error")) {
 console.log("pipeline gates passed: typecheck, lint, test, build exist and are hard failures");
 ' /home/DRE/projects/pipeline/.github/workflows/ci.yml
 
-printf 'phase-5 fixture validation passed\n' | tee -a "$LOGS/results.txt"
+finish_suite 'phase-5 fixture validation passed'
