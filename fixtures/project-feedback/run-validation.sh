@@ -78,4 +78,42 @@ if (source.includes("continue-on-error")) {
 console.log("pipeline gates passed: typecheck, lint, test, build exist and are hard failures");
 ' /home/DRE/projects/pipeline/.github/workflows/ci.yml
 
+# Backfilled from the Phase 5 Independent Verification Repairs: two static
+# checks bypassed metadata capture (HARNESS-ROADMAP.md). Every suite must emit
+# case results only through _lib/run-case.sh.
+run_case results-contract-no-bypass 0 node -e '
+const fs = require("node:fs"), path = require("node:path");
+const harness = path.resolve(process.argv[1], "../..");
+const fixtures = path.join(harness, "fixtures");
+const suites = fs.readdirSync(fixtures, { withFileTypes: true })
+  .filter(e => e.isDirectory() && !e.name.startsWith("_"))
+  .map(e => e.name);
+const problems = [];
+const directWrite = ">" + ">" + "$CASE_RESULTS";
+const directWriteQuoted = ">" + ">" + "\"$CASE_RESULTS\"";
+for (const suite of suites) {
+  const file = path.join(fixtures, suite, "run-validation.sh");
+  if (!fs.existsSync(file)) continue;
+  const text = fs.readFileSync(file, "utf8");
+  if (!text.includes("run-case.sh")) problems.push(suite + ": does not source _lib/run-case.sh");
+  if (text.includes(directWriteQuoted) || text.includes(directWrite)) problems.push(suite + ": writes case-results.jsonl directly");
+}
+if (problems.length) { console.error("results-contract bypass:\n" + problems.join("\n")); process.exit(1); }
+console.log("all " + suites.length + " suites emit case results only through _lib/run-case.sh");
+' "$ROOT"
+
+# Backfilled from the Phase 15 out-of-scope fixes: the collectors scanned _lib
+# as if it were a suite (HARNESS-ROADMAP.md).
+run_case collectors-exclude-underscore 0 node -e '
+const fs = require("node:fs"), path = require("node:path");
+const harness = path.resolve(process.argv[1], "../..");
+const missing = [];
+for (const rel of ["harness-test.sh", "scripts/collect-metrics.sh"]) {
+  const text = fs.readFileSync(path.join(harness, rel), "utf8");
+  if (!text.includes("! -name \"_*\"")) missing.push(rel);
+}
+if (missing.length) { console.error("collectors scan underscore dirs: " + missing.join(", ")); process.exit(1); }
+console.log("harness-test.sh and collect-metrics.sh exclude _* directories");
+' "$ROOT"
+
 finish_suite 'phase-5 fixture validation passed'
