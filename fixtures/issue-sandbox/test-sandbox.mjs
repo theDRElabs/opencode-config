@@ -61,7 +61,7 @@ function attempt(name, fn) {
 }
 attempt("read-secret-env", () => fs.readFileSync(path.join(secrets, "secret.env"), "utf8"));
 attempt("read-id-rsa", () => fs.readFileSync(path.join(secrets, "id_rsa"), "utf8"));
-attempt("read-root-config", () => fs.readFileSync("/root/.config/opencode/opencode.jsonc", "utf8"));
+attempt("read-root-config", () => fs.readFileSync("/home/ubuntu/.config/opencode/opencode.jsonc", "utf8"));
 attempt("read-proc-environ", () => fs.readFileSync("/proc/self/environ", "utf8"));
 attempt("read-proc-self", () => fs.readFileSync("/proc/self/status", "utf8"));
 attempt("read-etc-shadow", () => fs.readFileSync("/etc/shadow", "utf8"));
@@ -222,7 +222,7 @@ function attempt(name, expect, fn) {
 attempt("opendir-enum-secrets", "denied", () => { const d = fs.opendirSync(secrets); d.closeSync(); });
 attempt("utimes-tamper-host", "denied", () => { const t = new Date(); fs.utimesSync(path.join(unrelated, "notes.txt"), t, t); });
 attempt("readlink-proc", "denied", () => fs.readlinkSync("/proc/self/exe"));
-attempt("exists-host-root", "denied", () => { fs.existsSync("/root/.config"); });
+attempt("exists-host-root", "denied", () => { fs.existsSync("/home/ubuntu/.config"); });
 attempt("stat-etc-hostname", "denied", () => { fs.statSync("/etc/hostname"); });
 // LD_PRELOAD env injection through an allowlisted node child (verifier
 // round-3 blocking finding 2): the loader keys must be stripped from every

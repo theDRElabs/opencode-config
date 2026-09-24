@@ -5,7 +5,7 @@ const { execFileSync } = require('node:child_process');
 
 const root = process.argv[2];
 const audit = fs.readFileSync(path.join(root, 'taskflow-audit.md'), 'utf8');
-const project = '/root/projects/taskflow';
+const project = '/home/ubuntu/projects/taskflow';
 const expectedHead = '77cfda60e32bfdc1a5475ce604550c6122d62dc7';
 const actualHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: project, encoding: 'utf8' }).trim();
 const status = execFileSync('git', ['status', '--porcelain'], { cwd: project, encoding: 'utf8' });

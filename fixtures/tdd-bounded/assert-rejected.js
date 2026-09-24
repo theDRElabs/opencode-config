@@ -2,7 +2,7 @@
 
 const fs = require("node:fs");
 const issue = fs.readFileSync(process.argv[2], "utf8");
-const implementer = fs.readFileSync("/root/.config/opencode/agent/bounded-implementer.md", "utf8");
+const implementer = fs.readFileSync("/home/ubuntu/.config/opencode/agent/bounded-implementer.md", "utf8");
 const normalizedImplementer = implementer.toLowerCase().replace(/\s+/g, " ");
 for (const marker of ["TYPE: hitl", "STATUS: blocked", "COMMANDS: UNKNOWN", "human decision"]) {
   if (!issue.toLowerCase().includes(marker.toLowerCase())) {

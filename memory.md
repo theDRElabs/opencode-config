@@ -1,24 +1,24 @@
 
-## 2026-09-05 16:37 /root
-last: i keep seeing this error when my subagents are working: "Subagent depth limit reached (1). Increase "subagent_depth" to …
+## 2026-09-12 22:12 /mnt/c/Users/Administrator
+last: You are in a read-only verification context. Do NOT modify any files, do not run any write commands. Run these commands …
 
-## 2026-09-05 16:39 /root
-last: raise it to 3 if it wont affect the speed of this device
+## 2026-09-12 22:15 /mnt/c/Users/Administrator
+last: yes install it and plug it to this harness as eaelier suggested
 
-## 2026-09-05 16:44 /root
-last: add excalidraw mcp here
+## 2026-09-12 22:41 /mnt/c/Users/Administrator
+last: i need help setting up an android emulator on my Windows instance so i can test app builds myself before downloading to …
 
-## 2026-09-05 16:46 /root
-last: you're done?
+## 2026-09-12 22:42 /mnt/c/Users/Administrator
+last: before io reboot. i want to see and use the emulator myself, hope that is set up?
 
-## 2026-09-05 16:55 /root
-last: twitter-mcp project: PRD (~/projects/twitter-mcp/docs/PRD.md) accepted after independent verification (12 findings resolved: gate protocol, outcome taxonomy, token lifecycle, blocked recovery, single-tenant, opencode primary). Backlog at docs/BACKLOG.md — 13 issues; afk: 002 scaffold, 004 MCP client, 006 shred, 007 drafts, 009 taxonomy; hitl: 001 spike, 003 auth, 005 session, 008 publish, 010 blocked, 011 email (provider UNKNOWN), 012 gate, 013 npm release. 001+002 parallel-ready. Architecture: open-source npm MCP client + closed hosted backend, X via hosted browser session (manual login, no API, TOS risk accepted).
+## 2026-09-12 22:43 /mnt/c/Users/Administrator
+last: before i go ahead and reboot, one question needs clarification. i want to be able to see and use the emulator myself, ho…
 
-## 2026-09-05 16:58 /root
-last: accepted
+## 2026-09-12 22:46 /mnt/c/Users/Administrator
+last: install scrcpy now and i want to still be able to launch it directly as stated in step 1, after rebooting.
 
-## 2026-09-05 17:07 /root
-last: start from issue 1
+## 2026-09-24 05:30 /home/ubuntu/Documents/Default Project
+last: why cant the last session i ran be found ?
 
-## 2026-09-05 17:22 /root
-last: going forward, before installing anything, tell me the file size and ask for permissions. do not install anything withou…
+## 2026-09-24 05:32 /home/ubuntu/Documents/Default Project
+last: check my opencode setup repo in github and crosscheckk with this current opencode setup tl see what is missing

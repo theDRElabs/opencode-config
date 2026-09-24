@@ -1,6 +1,7 @@
 ---
 description: Independently reviews one substantial implementation from complete artifacts in a fresh read-only context.
 mode: subagent
+model: opencode/big-pickle
 permission:
   read: allow
   glob: allow
