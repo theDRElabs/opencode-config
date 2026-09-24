@@ -8,6 +8,9 @@ user-invocable: false
 
 Apply these rules when writing or reviewing Next.js code.
 
+> **Quick reference:** For a condensed overview of all topics: `references-CONDENSED.md`
+> For deep dives: read the individual reference files listed below.
+
 ## File Conventions
 
 See [file-conventions.md](./file-conventions.md) for:

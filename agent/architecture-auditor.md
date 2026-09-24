@@ -1,6 +1,7 @@
 ---
 description: Performs one bounded, evidence-backed architecture audit in a read-only context.
 mode: subagent
+model: opencode/big-pickle
 permission:
   read: allow
   glob: allow

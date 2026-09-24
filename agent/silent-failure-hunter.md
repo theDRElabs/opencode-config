@@ -2,6 +2,7 @@
 name: silent-failure-hunter
 description: Review code for silent failures, swallowed errors, bad fallbacks, and missing error propagation.
 mode: subagent
+model: opencode/big-pickle
 permission:
   read: allow
   glob: allow

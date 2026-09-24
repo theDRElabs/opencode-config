@@ -1,6 +1,6 @@
 ---
 name: frontend-design
-description: Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.
+description: Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Covers aesthetic direction, typography, anti-patterns, premium component architecture, motion choreography, and performance guardrails. Makes choices that don't read as templated defaults.
 license: Complete terms in LICENSE.txt
 ---
 
@@ -53,3 +53,91 @@ Use active voice as default. A control should say exactly what happens when it's
 Treat failure and emptiness as moments for direction, not mood. Explain what went wrong and how to fix it, in the interface's voice rather than a person's. Errors don't apologize, and they are never vague about what happened. An empty screen is an invitation to act.
 
 Keep the register conversational and tuned: plain verbs, sentence case, no filler, with tone matched to the brand and the audience. Let each element do exactly one job. A label labels, an example demonstrates, and nothing quietly does double duty.
+
+## Anti-patterns (Absolute Zero)
+
+If your generated code includes ANY of the following, the design instantly fails:
+
+- **Banned Fonts:** Inter, Roboto, Arial, Open Sans, Helvetica. Use premium fonts like Geist, Clash Display, PP Editorial New, or Plus Jakarta Sans.
+- **Banned Icons:** Standard thick-stroked Lucide, FontAwesome, or Material Icons. Use only ultra-light, precise lines (e.g., Phosphor Light, Remix Line).
+- **Banned Borders & Shadows:** Generic 1px solid gray borders. Harsh, dark drop shadows (`shadow-md`, `rgba(0,0,0,0.3)`).
+- **Banned Layouts:** Edge-to-edge sticky navbars glued to the top. Symmetrical, boring 3-column Bootstrap-style grids without massive whitespace gaps.
+- **Banned Motion:** Standard `linear` or `ease-in-out` transitions. Instant state changes without interpolation.
+
+## Creative Variance Engine
+
+Before writing code, silently "roll the dice" and select ONE combination from the following archetypes based on the prompt's context to ensure the output is uniquely tailored but always premium.
+
+### Vibe & Texture Archetypes (Pick 1)
+
+1. **Ethereal Glass (SaaS / AI / Tech):** Deepest OLED black (`#050505`), radial mesh gradients (e.g., subtle glowing purple/emerald orbs) in the background. Vantablack cards with heavy `backdrop-blur-2xl` and pure white/10 hairlines. Wide geometric Grotesk typography.
+2. **Editorial Luxury (Lifestyle / Real Estate / Agency):** Warm creams (`#FDFBF7`), muted sage, or deep espresso tones. High-contrast Variable Serif fonts for massive headings. Subtle CSS noise/film-grain overlay (`opacity-[0.03]`) for a physical paper feel.
+3. **Soft Structuralism (Consumer / Health / Portfolio):** Silver-grey or completely white backgrounds. Massive bold Grotesk typography. Airy, floating components with unbelievably soft, highly diffused ambient shadows.
+
+### Layout Archetypes (Pick 1)
+
+1. **The Asymmetrical Bento:** A masonry-like CSS Grid of varying card sizes (e.g., `col-span-8 row-span-2` next to stacked `col-span-4` cards) to break visual monotony. Mobile: falls back to single-column stack (`grid-cols-1`) with generous vertical gaps (`gap-6`).
+2. **The Z-Axis Cascade:** Elements stacked like physical cards, slightly overlapping with varying depths of field, some with subtle `-2deg` or `3deg` rotation. Mobile: remove all rotations and overlaps below `768px`. Stack vertically with standard spacing.
+3. **The Editorial Split:** Massive typography on the left half (`w-1/2`), with interactive, scrollable horizontal image pills or staggered cards on the right. Mobile: converts to full-width vertical stack (`w-full`).
+
+**Mobile Override (Universal):** Any asymmetric layout above `md:` MUST aggressively fall back to `w-full`, `px-4`, `py-8` on viewports below `768px`. Never use `h-screen` — always use `min-h-[100dvh]` to prevent iOS Safari viewport jumping.
+
+## Haptic Micro-Aesthetics
+
+### Double-Bezel (Nested Architecture)
+
+Never place a premium card flatly on the background. Use nested enclosures:
+
+- **Outer Shell:** A wrapper `div` with subtle background (`bg-black/5` or `bg-white/5`), hairline outer border (`ring-1 ring-black/5`), specific padding (`p-1.5` or `p-2`), large outer radius (`rounded-[2rem]`).
+- **Inner Core:** The actual content container with its own background, inner highlight (`shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]`), and mathematically smaller radius (`rounded-[calc(2rem-0.375rem)]`).
+
+### Nested CTA & Island Button Architecture
+
+- Primary interactive buttons must be fully rounded pills (`rounded-full`) with generous padding (`px-6 py-3`).
+- If a button has an arrow (`↗`), it NEVER sits naked next to the text. It must be nested inside its own circular wrapper (e.g., `w-8 h-8 rounded-full bg-black/5 flex items-center justify-center`) flush with the main button's right inner padding.
+
+### Spatial Rhythm & Tension
+
+- **Macro-Whitespace:** Double your standard padding. Use `py-24` to `py-40` for sections. Allow the design to breathe heavily.
+- **Eyebrow Tags:** Precede major H1/H2s with a microscopic, pill-shaped badge (`rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium`).
+
+## Motion Choreography
+
+Never use default transitions. All motion must simulate real-world mass and spring physics. Use custom cubic-beziers (e.g., `transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]`).
+
+### Fluid Island Nav & Hamburger Reveal
+
+- **Closed State:** Navbar is a floating glass pill detached from the top (`mt-6`, `mx-auto`, `w-max`, `rounded-full`).
+- **Hamburger Morph:** On click, lines fluidly rotate and translate to form a perfect 'X' (`rotate-45` and `-rotate-45` with absolute positioning).
+- **Modal Expansion:** Menu opens as a massive, screen-filling overlay with heavy glass effect (`backdrop-blur-3xl bg-black/80`).
+- **Staggered Mask Reveal:** Nav links fade in and slide up from invisible (`translate-y-12 opacity-0` to `translate-y-0 opacity-100`) with staggered delay (`delay-100`, `delay-150`, `delay-200`).
+
+### Magnetic Button Hover Physics
+
+- Use the `group` utility. On hover, scale the button down slightly (`active:scale-[0.98]`) to simulate physical pressing.
+- The nested inner icon circle translates diagonally (`group-hover:translate-x-1 group-hover:-translate-y-[1px]`) and scales up slightly (`scale-105`).
+
+### Scroll Interpolation (Entry Animations)
+
+- Elements execute a gentle, heavy fade-up (`translate-y-16 blur-md opacity-0` resolving to `translate-y-0 blur-0 opacity-100` over 800ms+).
+- For JS-driven scroll reveals, use `IntersectionObserver` or Framer Motion's `whileInView`. Never use `window.addEventListener('scroll')`.
+
+## Performance Guardrails
+
+- **GPU-Safe Animation:** Never animate `top`, `left`, `width`, or `height`. Animate exclusively via `transform` and `opacity`. Use `will-change: transform` sparingly.
+- **Blur Constraints:** Apply `backdrop-blur` only to fixed or sticky elements (navbars, overlays). Never apply to scrolling containers or large content areas.
+- **Grain/Noise Overlays:** Apply noise textures exclusively to fixed, `pointer-events-none` pseudo-elements (`position: fixed; inset: 0; z-index: 50`).
+- **Z-Index Discipline:** Do not use arbitrary `z-50` or `z-[9999]`. Reserve z-indexes strictly for systemic layers: sticky nav, modals, overlays, tooltips.
+
+## Pre-Output Checklist
+
+- [ ] No banned fonts, icons, borders, shadows, layouts, or motion patterns present
+- [ ] A Vibe Archetype and Layout Archetype were consciously selected and applied
+- [ ] All major cards use the Double-Bezel nested architecture (outer shell + inner core)
+- [ ] CTA buttons use the Button-in-Button trailing icon pattern where applicable
+- [ ] Section padding is at minimum `py-24`
+- [ ] All transitions use custom cubic-bezier curves — no `linear` or `ease-in-out`
+- [ ] Scroll entry animations are present — no element appears statically
+- [ ] Layout collapses gracefully below `768px` to single-column with `w-full` and `px-4`
+- [ ] All animations use only `transform` and `opacity`
+- [ ] `backdrop-blur` is only applied to fixed/sticky elements

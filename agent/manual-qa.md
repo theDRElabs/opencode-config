@@ -1,6 +1,7 @@
 ---
 description: Produces a human QA plan and bounded browser evidence record without claiming human acceptance.
 mode: subagent
+model: opencode/big-pickle
 permission:
   read: allow
   glob: allow

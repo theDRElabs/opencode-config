@@ -2,6 +2,7 @@
 name: security-reviewer
 description: Read-only security review specialist for user input, authentication, authorization, API endpoints, sensitive data, secrets, SSRF, injection, unsafe crypto, and OWASP Top 10 risks.
 mode: subagent
+model: opencode/big-pickle
 permission:
   read: allow
   glob: allow

@@ -6,7 +6,7 @@ WORK="/tmp/opencode/p5-validation"
 LOGS="$WORK/logs"
 WEB="$ROOT/node-web"
 ANDROID="$ROOT/android"
-PIPELINE_INIT="/root/projects/pipeline/pipeline-init.sh"
+PIPELINE_INIT="/home/ubuntu/projects/pipeline/pipeline-init.sh"
 
 rm -rf "$WORK"
 mkdir -p "$LOGS"
@@ -84,6 +84,6 @@ if (source.includes("continue-on-error")) {
   process.exit(1);
 }
 console.log("pipeline gates passed: typecheck, lint, test, build exist and are hard failures");
-' /root/projects/pipeline/.github/workflows/ci.yml
+' /home/ubuntu/projects/pipeline/.github/workflows/ci.yml
 
 printf 'phase-5 fixture validation passed\n' | tee -a "$LOGS/results.txt"

@@ -1,0 +1,53 @@
+{"ts":"2026-09-10T11:02:19+00:00","event":"run-start","issue":"ISSUE-001","attempt":1,"base_commit":"7471408"}
+{"ts":"2026-09-10T12:48:39+00:00","event":"implement-complete","issue":"ISSUE-001","attempt":1}
+{"ts":"2026-09-10T12:49:21+00:00","event":"checks-pass","issue":"ISSUE-001","attempt":1,"checks":["yaml_valid","assembleRelease_present","gate_4194304_exit1","artifact_name","pkcs12_valid","diff_additions_only"]}
+{"ts":"2026-09-10T13:07:37+00:00","event":"review-pass","issue":"ISSUE-001","attempt":1,"verdict":"PASS","blocking":0,"non_blocking":3,"notes":5}
+{"ts":"2026-09-10T13:12:55+00:00","event":"ci-failed","issue":"ISSUE-001","run":34480922864,"cause":"kotlin-dsl: java.util.Properties unresolved (java = project extension); fix: import java.util.Properties"}
+{"ts":"2026-09-10T13:18:10+00:00","event":"ci-green","issue":"ISSUE-001","run":34481250613,"artifacts":["datacheck-release-apk:1028702B","datacheck-debug-apk:8817599B"],"note":"gate passed, release ~1.03MB < 4MiB"}
+{"ts":"2026-09-10T13:18:10+00:00","event":"issue-done","issue":"ISSUE-001","attempts":2,"final_commit":"fdc792b"}
+{"ts":"2026-09-10T13:22:17+00:00","event":"issue-start","issue":"ISSUE-002","attempt":1,"base_commit":"fdc792b","tdd_mode":"two-push-ci"}
+{"ts":"2026-09-10T13:34:35+00:00","event":"tdd-red-verified","issue":"ISSUE-002","run":34483016952,"result":"build job failed at testDebugUnitTest: 8/8 predicted tests FAILED (AssertionError), compile OK, release job success, 3 new + 6 existing tests passed"}
+{"ts":"2026-09-10T13:54:21+00:00","event":"test-defect-fixed","issue":"ISSUE-002","detail":"green run 34484850567: 1 test failed — phase-1 test wrote 7_999_999_000_000L (delta 1MB) but asserted 1_000_000_000L (1GB); red phase masked the defect (stub returned 0). Operand corrected to 7_999_000_000_000L to match the test documented intent; implementation unchanged"}
+{"ts":"2026-09-10T13:59:02+00:00","event":"tdd-green-verified","issue":"ISSUE-002","run":34485585367,"result":"build+release success, testDebugUnitTest all pass (17 tests), both artifacts present"}
+{"ts":"2026-09-10T14:04:35+00:00","event":"review-pass","issue":"ISSUE-002","attempt":1,"verdict":"PASS","blocking":0,"non_blocking":2,"notes":5}
+{"ts":"2026-09-10T14:04:35+00:00","event":"issue-done","issue":"ISSUE-002","commits":["4b3134c","17a4795","c42d5a0"],"tdd":"red 34483016952 -> green 34485585367"}
+{"ts":"2026-09-10T14:13:58+00:00","event":"issue-start","issue":"ISSUE-003","attempt":1,"base_commit":"7bd68b3","note":"docs-only: VALIDATION.md QA kit; resumed session (opencode restart)"}
+{"ts":"2026-09-10T14:21:49+00:00","event":"implement-complete","issue":"ISSUE-003","attempt":1,"files":["VALIDATION.md"]}
+{"ts":"2026-09-10T14:21:49+00:00","event":"checks-pass","issue":"ISSUE-003","attempt":1,"checks":["file_exists_repo_root","git_status_only_new_VALIDATION.md","git_diff_empty","references_actual_toggle_label","references_card_fields","references_artifact_names","results_template_present","implementation_result_present","citation_spot_checks_3_sources"]}
+{"ts":"2026-09-10T14:29:19+00:00","event":"review-pass","issue":"ISSUE-003","attempt":1,"verdict":"PASS","blocking":0,"non_blocking":3,"notes":0,"verified_claims":"32/32"}
+{"ts":"2026-09-10T14:29:19+00:00","event":"issue-done","issue":"ISSUE-003","attempts":1,"deliverable":"VALIDATION.md","commit":"pending user approval"}
+{"ts":"2026-09-10T14:29:47+00:00","event":"issue-start","issue":"ISSUE-004","attempt":1,"base_commit":"7bd68b3","note":"read-only review pass; deliverable docs/REVIEW-FINDINGS-M6.md"}
+{"ts":"2026-09-10T14:44:27+00:00","event":"implement-complete","issue":"ISSUE-004","attempt":1,"files":["docs/REVIEW-FINDINGS-M6.md"],"findings":"1h/6m/6l=13"}
+{"ts":"2026-09-10T14:44:27+00:00","event":"checks-pass","issue":"ISSUE-004","attempt":1,"checks":["file_exists","13_findings_le_15","severity_in_each_header","fix_per_finding","module_coverage_all_9","not_findings_section_present","git_scope_clean","implementation_result_present"]}
+{"ts":"2026-09-10T14:48:52+00:00","event":"review-pass","issue":"ISSUE-004","attempt":1,"verdict":"PASS","blocking":0,"non_blocking":2,"verified_findings":"13/13","false_negatives":"none material"}
+{"ts":"2026-09-10T14:48:52+00:00","event":"issue-done","issue":"ISSUE-004","attempts":1,"deliverable":"docs/REVIEW-FINDINGS-M6.md","findings":"1h/6m/6l","commit":"pending user approval"}
+{"ts":"2026-09-10T14:49:18+00:00","event":"backlog-updated","issue":"ISSUE-005","detail":"status blocked -> ready (HITL, owner: user); blockers 001/002/003 all done"}
+{"ts":"2026-09-10T14:49:18+00:00","event":"session-complete","detail":"ISSUE-003 + ISSUE-004 done (impl + checks + fresh review PASS each); commits pending user approval: VALIDATION.md, docs/REVIEW-FINDINGS-M6.md, docs/BACKLOG-M6.md"}
+{"ts":"2026-09-10T15:12:07+00:00","event":"ci-green","issue":"ISSUE-003+004","run":34493571577,"commit":"a0bf2e7","detail":"docs-only commit; both jobs green; contract satisfied"}
+{"ts":"2026-09-11T09:41:39+00:00","event":"issue-spawned","issue":"ISSUE-006","from":"ISSUE-005","detail":"Check 1 FAIL: logged 749MB vs NSM raw 441MB (delta +308MB) - F-04 double-count race confirmed on device"}
+{"ts":"2026-09-11T09:41:39+00:00","event":"issue-spawned","issue":"ISSUE-007","from":"ISSUE-005","detail":"bundle shows 18MB left vs real 63MB; usage counts from renewal-cycle start, not entry time (121MB @ 2026-09-10 17:21)"}
+{"ts":"2026-09-11T09:41:39+00:00","event":"validation-partial","issue":"ISSUE-005","detail":"Check 3 sideload PASS, prerequisites PASS, Check 1 accuracy FAIL (attributed: our sampling bug, not system-level); Check 2 reboot pending"}
+{"ts":"2026-09-11T09:41:57+00:00","event":"issue-start","issue":"ISSUE-006","attempt":1,"base_commit":"a0bf2e7","note":"F-04 double-count fix: DB-backed window start + app-scoped mutex + regression test; TDD red first via CI"}
+{"ts":"2026-09-11T10:06:34+00:00","event":"phase1-complete","issue":"ISSUE-006","attempt":1,"files":["data/TickBookkeeper.kt","TickBookkeeperTest.kt"],"tests":"11 total, 7 expected red, 4 green guards"}
+{"ts":"2026-09-11T10:10:48+00:00","event":"tdd-red-verified","issue":"ISSUE-006","run":34587597213,"result":"28 tests, 7 FAILED (exactly the 7 predicted), 4 guards + 21 existing green; release job unaffected"}
+{"ts":"2026-09-11T10:22:19+00:00","event":"phase2-complete","issue":"ISSUE-006","attempt":1,"files_changed":["data/TickBookkeeper.kt","data/SamplingEngine.kt","ui/dashboard/DashboardScreen.kt"],"tests_frozen":true}
+{"ts":"2026-09-11T10:27:46+00:00","event":"tdd-green-verified","issue":"ISSUE-006","run":34588888051,"result":"build+release success, testDebugUnitTest exit 0 (28 tests incl. 11 TickBookkeeperTest), both artifacts present"}
+{"ts":"2026-09-11T10:39:22+00:00","event":"review-pass","issue":"ISSUE-006","attempt":1,"verdict":"PASS","blocking":0,"non_blocking":3}
+{"ts":"2026-09-11T10:39:22+00:00","event":"issue-done","issue":"ISSUE-006","attempts":1,"commits":["c9bb631","e3b919e"],"tdd":"red 34587597213 -> green 34588888051","note":"backlog status edit pending commit"}
+{"ts":"2026-09-11T11:39:27+00:00","event":"issue-start","issue":"ISSUE-007","attempt":1,"base_commit":"ef57ede","note":"bundle baseline from entry time; two-push TDD via CI"}
+{"ts":"2026-09-11T11:48:13+00:00","event":"phase1-complete","issue":"ISSUE-007","attempt":1,"files":["data/BundleLogic.kt","BundleLogicTest.kt"],"tests":"12 total, all 12 expected red"}
+{"ts":"2026-09-11T11:53:13+00:00","event":"tdd-red-verified","issue":"ISSUE-007","run":34595788054,"result":"40 tests, 12 FAILED (all 12 predicted), 28 existing green; release job unaffected"}
+{"ts":"2026-09-11T12:00:29+00:00","event":"phase2-complete","issue":"ISSUE-007","attempt":1,"files_changed":["data/BundleLogic.kt","data/Prefs.kt","ui/dashboard/DashboardScreen.kt","ui/settings/SettingsScreen.kt"],"tests_frozen":true}
+{"ts":"2026-09-11T16:33:34+00:00","event":"tdd-green-verified","issue":"ISSUE-007","run":34596751891,"result":"build (incl. testDebugUnitTest) + release success, 40 tests, both artifacts present"}
+{"ts":"2026-09-11T16:48:16+00:00","event":"review-pass","issue":"ISSUE-007","attempt":1,"verdict":"PASS","blocking":0,"non_blocking":9,"note":"NB-1 medium: new totalsSince(entryAtMs) call site widens F-01 hit-window"}
+{"ts":"2026-09-11T16:48:16+00:00","event":"issue-done","issue":"ISSUE-007","attempts":1,"commits":["bdc2b03","7c3053d"],"tdd":"red 34595788054 -> green 34596751891"}
+{"ts":"2026-09-11T17:01:18+00:00","event":"issue-start","issue":"ISSUE-008","attempt":1,"base_commit":"517f04c","note":"F-01: IFNULL guard on totalsSince SUMs + structural pin test; two-push TDD via CI"}
+{"ts":"2026-09-11T17:04:21+00:00","event":"phase1-complete","issue":"ISSUE-008","attempt":1,"files":["UsageLogDaoSqlGuardTest.kt"],"tests":"1 structural pin, expected red"}
+{"ts":"2026-09-11T17:10:36+00:00","event":"tdd-red-verified","issue":"ISSUE-008","run":34625633777,"result":"41 tests, 1 FAILED (the predicted pin test), 40 existing green; release job unaffected"}
+{"ts":"2026-09-11T17:13:56+00:00","event":"phase2-complete","issue":"ISSUE-008","attempt":1,"files_changed":["data/db/UsageLogDao.kt (one SQL line)"],"tests_frozen":true}
+{"ts":"2026-09-11T17:20:25+00:00","event":"green-failed-test-defect","issue":"ISSUE-008","run":34626521082,"detail":"pin test still red at line 29 after fix: androidx.room.Query has BINARY retention, unreadable via runtime reflection; both red and green failed at assertNotNull, so phase-1 red was misattributed (mechanism defect masked by red). SQL fix itself correct. Fix: convert pin test to source-file read; same assertions."}
+{"ts":"2026-09-11T17:27:02+00:00","event":"test-defect-fixed","issue":"ISSUE-008","detail":"pin test converted from broken annotation reflection (BINARY retention) to source-file pin; same assertions; loud failure if source not found"}
+{"ts":"2026-09-11T17:32:03+00:00","event":"tdd-green-verified","issue":"ISSUE-008","run":34627788176,"result":"build+release success, 41/41 tests (incl. source pin), both artifacts present"}
+{"ts":"2026-09-11T23:08:33+00:00","event":"review-pass","issue":"ISSUE-008","attempt":1,"verdict":"PASS","blocking":0,"non_blocking":4}
+{"ts":"2026-09-11T23:08:33+00:00","event":"issue-done","issue":"ISSUE-008","attempts":1,"commits":["a853443","1b37cd4","b5b6b9c"],"tdd":"red 34625633777 (misattributed) -> defect exposed 34626521082 -> green 34627788176"}
+{"ts":"2026-09-11T23:13:20+00:00","event":"ci-green","issue":"ISSUE-008","run":34656911821,"commit":"3a01afd","detail":"docs-only backlog update; both jobs green"}

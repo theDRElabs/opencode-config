@@ -1,5 +1,5 @@
 const fs = require('node:fs');
-const { chromium } = require('/root/projects/lumen/node_modules/playwright');
+const { chromium } = require('/home/ubuntu/.config/opencode/node_modules/playwright');
 const base = process.env.BASE_URL || 'http://127.0.0.1:4178';
 const artifactDir = process.env.ARTIFACT_DIR || '/tmp/opencode/p8-validation/artifacts';
 fs.mkdirSync(artifactDir, { recursive: true });

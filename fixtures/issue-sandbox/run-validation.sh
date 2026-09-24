@@ -24,9 +24,7 @@ run_case syntax-integration 0 node --check "$ROOT/integration-adapter.mjs"
 run_case syntax-shell 0 bash -n "$ROOT/run-validation.sh"
 
 # Namespace discipline: the sandbox must not use unshare, mount namespaces,
-# or any namespace syscall wrapper. proot ptrace translation on this device
-# is corrupted by user namespaces (incident 2026-08-29), so isolation is
-# process-level by design.
+# or any namespace syscall wrapper. Isolation is process-level by design.
 if grep -rn -E 'unshare|map-root-user|CLONE_NEW|clone\(' "$ROOT"/sandbox.mjs "$ROOT"/guard-preload.cjs "$ROOT"/integration-adapter.mjs; then
   printf 'namespace-usage exit=1 expected=0 cwd=%s evidence=%s\n' "$ROOT" "$LOGS/namespace-usage.log" | tee -a "$LOGS/results.txt"
   exit 1
@@ -83,4 +81,15 @@ else
 fi
 
 run_case scenarios 0 node "$ROOT/test-sandbox.mjs" "$OUT"
+
+# Docker sandbox tests (if Docker is available)
+if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  run_case docker-syntax 0 node --check "$ROOT/sandbox-docker.mjs"
+  run_case docker-test-syntax 0 node --check "$ROOT/test-docker-sandbox.mjs"
+  run_case docker-scenarios 0 node "$ROOT/test-docker-sandbox.mjs" "$OUT/docker"
+  printf 'phase-11 docker validation passed\n' | tee -a "$LOGS/results.txt"
+else
+  printf 'docker-scenarios SKIP (Docker not available)\n' | tee -a "$LOGS/results.txt"
+fi
+
 printf 'phase-11 deterministic validation passed\n' | tee -a "$LOGS/results.txt"
