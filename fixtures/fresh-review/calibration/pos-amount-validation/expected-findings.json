@@ -1,0 +1,12 @@
+{
+  "case": "pos-amount-validation",
+  "verdict": "FAIL",
+  "control": "positive",
+  "pending_hand_grade": true,
+  "findings": [
+    {"id": "F1", "severity": "critical", "path": "src/order.js", "line": 2, "kind": "missing-validation"},
+    {"id": "F2", "severity": "high", "path": "test/order.test.js", "line": 3, "kind": "weak-test"},
+    {"id": "F3", "severity": "medium", "path": "src/unrelated.js", "line": 1, "kind": "unrelated-change"},
+    {"id": "F4", "severity": "medium", "path": "verification.log", "line": 8, "kind": "uncovered-regression"}
+  ]
+}

@@ -1,0 +1,8 @@
+command=node --test
+cwd=/fixture
+environment=inherited
+duration_s=0
+exit_code=0
+result=PASS
+evidence=verification.log
+note=3/3 new boundary tests pass against the unchanged production function.

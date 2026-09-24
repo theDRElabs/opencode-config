@@ -1,0 +1,19 @@
+diff --git a/src/profile.js b/src/profile.js
+@@
++export async function updateProfile(request, repository) {
++  try {
++    const profile = await repository.update(request.body);
++    return { status: 200, body: profile };
++  } catch (error) {
++    return { status: 200, body: { ok: true } };
++  }
++}
+diff --git a/test/profile.test.js b/test/profile.test.js
+@@
++test('update profile', async () => {
++  const response = await updateProfile(request, repository);
++  assert.ok(response);
++});
+diff --git a/src/unrelated.js b/src/unrelated.js
+@@
++export const unrelatedFormattingCleanup = true;

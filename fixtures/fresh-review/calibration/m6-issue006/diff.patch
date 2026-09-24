@@ -1,0 +1,315 @@
+commit e3b919e4c736801ffc1dfac952edc3581c26a66f
+Author: DRE <144799227+theDRElabs@users.noreply.github.com>
+Date:   Fri Sep 11 10:22:19 2026 +0000
+
+    Fix double-counting: DB-backed atomic window bookkeeping via TickBookkeeper (M6 ISSUE-006 phase 2)
+
+diff --git a/app/src/main/java/com/drelabs/datacheck/data/SamplingEngine.kt b/app/src/main/java/com/drelabs/datacheck/data/SamplingEngine.kt
+index cbab5e1..22d0408 100644
+--- a/app/src/main/java/com/drelabs/datacheck/data/SamplingEngine.kt
++++ b/app/src/main/java/com/drelabs/datacheck/data/SamplingEngine.kt
+@@ -20,18 +20,63 @@ class SamplingEngine(private val context: Context) {
+ 
+     private val prefs = Prefs(context)
+     private val dao = UsageLogDb.get(context).usageLogDao()
++    private val bookkeeper = TickBookkeeper(RoomTickStore(dao), PrefsWindowCache(prefs))
+ 
+     suspend fun runTick(nowMs: Long = System.currentTimeMillis()): TickResult? {
+-        val start = resolveWindowStart(nowMs) ?: return null
+-        val perUid = queryMobilePerUid(start, nowMs)
++        val committed = bookkeeper.runWindow(nowMs) { start, end -> sampleWindow(start, end) }
++            ?: return null
++        dao.deleteOlderThan(committed.endMs - RETENTION_MS)
++        prefs.rebootPending = false
++        return TickResult(
++            TickEntity(
++                startMs = committed.startMs,
++                endMs = committed.endMs,
++                deviceRx = committed.deviceRx,
++                deviceTx = committed.deviceTx,
++            ),
++            committed.usages.map { usage ->
++                UsageEntity(
++                    tickId = 0L,
++                    tickStart = committed.startMs,
++                    uid = usage.uid,
++                    pkg = usage.pkg,
++                    rx = usage.rx,
++                    tx = usage.tx,
++                    fgRx = usage.fgRx,
++                    fgTx = usage.fgTx,
++                )
++            },
++        )
++    }
++
++    /**
++     * Raw NSM mobile total (rx+tx) for today's local window, for the
++     * dashboard validation card. Returns null when NSM is unavailable or
++     * the query fails. Read-only: never writes rows.
++     */
++    fun rawMobileTotalTodayBytes(nowMs: Long = System.currentTimeMillis()): Long? {
++        val zone = ZoneId.systemDefault()
++        val midnight = LocalDate.now(zone).atStartOfDay(zone).toInstant().toEpochMilli()
++        val device = queryDeviceTotal(midnight, nowMs) ?: return null
++        return device.first + device.second
++    }
++
++    /**
++     * Samples one [startMs, endMs] window via NSM (mobile-only, per-uid,
++     * FG/BG attribution) and returns a draft for [TickBookkeeper] to
++     * commit, or null when the window carries no mobile traffic. Runs
++     * inside the bookkeeper's critical section.
++     */
++    private fun sampleWindow(startMs: Long, endMs: Long): TickBookkeeper.TickDraft? {
++        val perUid = queryMobilePerUid(startMs, endMs)
+         if (perUid.isEmpty()) return null
+-        val device = queryDeviceTotal(start, nowMs)
+-        val fgByPkg = foregroundFractions(start, nowMs)
+-        val rows = perUid.map { (uid, bytes) ->
++        val device = queryDeviceTotal(startMs, endMs)
++        val fgByPkg = foregroundFractions(startMs, endMs)
++        val usages = perUid.map { (uid, bytes) ->
+             val pkg = pkgNameForUid(uid)
+             val total = bytes.first + bytes.second
++            val stateSplit = stateSplitForUid(uid, startMs, endMs)
+             val fgBytes: Long
+-            val stateSplit = stateSplitForUid(uid, start, nowMs)
+             fgBytes = if (stateSplit != null && stateSplit.first + stateSplit.second > 0) {
+                 stateSplit.first.coerceIn(0L, total)
+             } else {
+@@ -40,9 +85,7 @@ class SamplingEngine(private val context: Context) {
+             }
+             val fgRx = if (total > 0) (fgBytes.toDouble() * bytes.first / total).toLong() else 0L
+             val fgTx = fgBytes - fgRx
+-            UsageEntity(
+-                tickId = 0,
+-                tickStart = start,
++            TickBookkeeper.WindowUsage(
+                 uid = uid,
+                 pkg = pkg,
+                 rx = bytes.first,
+@@ -51,57 +94,11 @@ class SamplingEngine(private val context: Context) {
+                 fgTx = fgTx,
+             )
+         }
+-        val result = saveTick(
+-            start,
+-            nowMs,
+-            device?.first ?: perUid.values.sumOf { it.first },
+-            device?.second ?: perUid.values.sumOf { it.second },
+-            rows,
++        return TickBookkeeper.TickDraft(
++            deviceRx = device?.first ?: perUid.values.sumOf { it.first },
++            deviceTx = device?.second ?: perUid.values.sumOf { it.second },
++            usages = usages,
+         )
+-        prefs.rebootPending = false
+-        return result
+-    }
+-
+-    /**
+-     * Raw NSM mobile total (rx+tx) for today's local window, for the
+-     * dashboard validation card. Returns null when NSM is unavailable or
+-     * the query fails. Read-only: never writes rows.
+-     */
+-    fun rawMobileTotalTodayBytes(nowMs: Long = System.currentTimeMillis()): Long? {
+-        val zone = ZoneId.systemDefault()
+-        val midnight = LocalDate.now(zone).atStartOfDay(zone).toInstant().toEpochMilli()
+-        val device = queryDeviceTotal(midnight, nowMs) ?: return null
+-        return device.first + device.second
+-    }
+-
+-    private suspend fun saveTick(
+-        start: Long,
+-        end: Long,
+-        deviceRx: Long,
+-        deviceTx: Long,
+-        rows: List<UsageEntity>,
+-    ): TickResult {
+-        val tick = TickEntity(startMs = start, endMs = end, deviceRx = deviceRx, deviceTx = deviceTx)
+-        dao.insertTickWithUsages(tick, rows)
+-        dao.deleteOlderThan(end - RETENTION_MS)
+-        prefs.lastTickEndMs = end
+-        return TickResult(tick, rows)
+-    }
+-
+-    private fun resolveWindowStart(nowMs: Long): Long? {
+-        val last = prefs.lastTickEndMs
+-        return when {
+-            last == 0L -> {
+-                prefs.lastTickEndMs = nowMs
+-                null
+-            }
+-            nowMs - last > MAX_WINDOW_MS -> {
+-                prefs.lastTickEndMs = nowMs - MAX_WINDOW_MS
+-                nowMs - MAX_WINDOW_MS
+-            }
+-            nowMs <= last -> null
+-            else -> last
+-        }
+     }
+ 
+     @Suppress("DEPRECATION")
+diff --git a/app/src/main/java/com/drelabs/datacheck/data/TickBookkeeper.kt b/app/src/main/java/com/drelabs/datacheck/data/TickBookkeeper.kt
+index 668ee69..1ef7656 100644
+--- a/app/src/main/java/com/drelabs/datacheck/data/TickBookkeeper.kt
++++ b/app/src/main/java/com/drelabs/datacheck/data/TickBookkeeper.kt
+@@ -1,8 +1,15 @@
+ package com.drelabs.datacheck.data
+ 
++import com.drelabs.datacheck.data.db.TickEntity
++import com.drelabs.datacheck.data.db.UsageEntity
++import com.drelabs.datacheck.data.db.UsageLogDao
++import kotlinx.coroutines.sync.Mutex
++import kotlinx.coroutines.sync.withLock
++
+ /**
+  * Persistence surface required by [TickBookkeeper]. The production
+- * implementation adapts the Room UsageLogDao; JVM tests provide a fake.
++ * implementation is [RoomTickStore] (adapts the Room UsageLogDao); JVM
++ * tests provide a fake.
+  */
+ interface TickStore {
+     /** End time of the latest committed tick, or null when no tick exists. */
+@@ -56,34 +63,107 @@ class TickBookkeeper(private val store: TickStore, private val cache: WindowCach
+     )
+ 
+     /**
+-     * PHASE-1 STUB (ISSUE-006 RED): intentionally reproduces the buggy
+-     * read-then-write bookkeeping of SamplingEngine.resolveWindowStart —
+-     * cache-backed, no mutex, DB never consulted — so the phase-1 tests
+-     * fail at runtime. Phase 2 replaces the body: DB-backed resolution
+-     * under an app-scoped (companion-level) mutex, with resolve, sample
+-     * and insert as one critical section.
++     * Runs one complete window commit as a single critical section:
++     * resolve the start from the DB (source of truth), sample, insert,
++     * then mirror the new end into the cache. The DB end decides the
++     * window in every case — a stale, missing, or ahead-of-DB cache value
++     * is never consulted for resolution, so it can never cause an
++     * overlapping re-log, and a crash between insert and cache write is
++     * absorbed by the next DB read. Fresh installs (no tick rows) stamp
++     * the DB starting point and sample nothing.
+      */
+     suspend fun runWindow(
+         nowMs: Long,
+         sample: suspend (startMs: Long, endMs: Long) -> TickDraft?,
+-    ): CommittedWindow? {
+-        val last = cache.lastTickEndMs() ?: 0L
+-        val start: Long = when {
+-            last == 0L -> {
++    ): CommittedWindow? = windowMutex.withLock {
++        val lastEnd = store.latestEndMs()
++        if (lastEnd == null) {
++            store.stampStart(nowMs)
++            cache.storeLastTickEndMs(nowMs)
++            null
++        } else if (nowMs <= lastEnd) {
++            null
++        } else {
++            val startMs =
++                if (nowMs - lastEnd > MAX_WINDOW_MS) nowMs - MAX_WINDOW_MS else lastEnd
++            val draft = sample(startMs, nowMs)
++            if (draft == null) {
++                null
++            } else {
++                store.insertTick(startMs, nowMs, draft.deviceRx, draft.deviceTx, draft.usages)
+                 cache.storeLastTickEndMs(nowMs)
+-                return null
++                CommittedWindow(startMs, nowMs, draft.deviceRx, draft.deviceTx, draft.usages)
+             }
+-            nowMs - last > MAX_WINDOW_MS -> nowMs - MAX_WINDOW_MS
+-            nowMs <= last -> return null
+-            else -> last
+         }
+-        val draft = sample(start, nowMs) ?: return null
+-        store.insertTick(start, nowMs, draft.deviceRx, draft.deviceTx, draft.usages)
+-        cache.storeLastTickEndMs(nowMs)
+-        return CommittedWindow(start, nowMs, draft.deviceRx, draft.deviceTx, draft.usages)
+     }
+ 
+     companion object {
+         const val MAX_WINDOW_MS: Long = 6 * 60 * 60 * 1000L
++
++        /**
++         * App-scoped lock: SamplingEngine (and with it TickBookkeeper) is
++         * constructed per call site — WorkManager tick vs dashboard
++         * catch-up — so only a companion-level mutex serializes
++         * resolve→sample→insert across the whole process. [withLock]
++         * releases on exceptions, so a throwing sample cannot deadlock.
++         */
++        private val windowMutex = Mutex()
++    }
++}
++
++/**
++ * Production [TickStore] over the Room [UsageLogDao]. The DB is the
++ * source of truth: [UsageLogDao.latestEndMs] (previously dead code) is
++ * the live window-start query. [stampStart] persists an empty tick row
++ * (start == end, zero bytes, no usage rows) so a fresh install is
++ * immediately visible to [UsageLogDao.latestEndMs] without any schema
++ * change; it is invisible to usage-based queries and dashboards.
++ */
++class RoomTickStore(private val dao: UsageLogDao) : TickStore {
++
++    override suspend fun latestEndMs(): Long? = dao.latestEndMs()
++
++    override suspend fun stampStart(atMs: Long) {
++        dao.insertTickWithUsages(
++            TickEntity(startMs = atMs, endMs = atMs, deviceRx = 0L, deviceTx = 0L),
++            emptyList(),
++        )
++    }
++
++    override suspend fun insertTick(
++        startMs: Long,
++        endMs: Long,
++        deviceRx: Long,
++        deviceTx: Long,
++        usages: List<TickBookkeeper.WindowUsage>,
++    ) {
++        dao.insertTickWithUsages(
++            TickEntity(startMs = startMs, endMs = endMs, deviceRx = deviceRx, deviceTx = deviceTx),
++            usages.map { usage ->
++                UsageEntity(
++                    tickId = 0L,
++                    tickStart = startMs,
++                    uid = usage.uid,
++                    pkg = usage.pkg,
++                    rx = usage.rx,
++                    tx = usage.tx,
++                    fgRx = usage.fgRx,
++                    fgTx = usage.fgTx,
++                )
++            },
++        )
++    }
++}
++
++/**
++ * Production [WindowCache]: SharedPreferences mirror of the last tick
++ * end. Write-through only — no resolution decision is ever based on it.
++ */
++class PrefsWindowCache(private val prefs: Prefs) : WindowCache {
++
++    override fun lastTickEndMs(): Long? = prefs.lastTickEndMs.takeIf { it != 0L }
++
++    override fun storeLastTickEndMs(endMs: Long) {
++        prefs.lastTickEndMs = endMs
+     }
+ }
+diff --git a/app/src/main/java/com/drelabs/datacheck/ui/dashboard/DashboardScreen.kt b/app/src/main/java/com/drelabs/datacheck/ui/dashboard/DashboardScreen.kt
+index d62b000..afab662 100644
+--- a/app/src/main/java/com/drelabs/datacheck/ui/dashboard/DashboardScreen.kt
++++ b/app/src/main/java/com/drelabs/datacheck/ui/dashboard/DashboardScreen.kt
+@@ -267,9 +267,8 @@ private fun share(context: Context, file: File) {
+ }
+ 
+ private suspend fun backfillTick(context: Context) {
+-    val prefs = com.drelabs.datacheck.data.Prefs(context)
+     val now = System.currentTimeMillis()
+-    val last = prefs.lastTickEndMs
++    val last = UsageLogDb.get(context).usageLogDao().latestEndMs() ?: 0L
+     if (last == 0L || now - last >= 10 * 60_000L) {
+         com.drelabs.datacheck.data.SamplingEngine(context).runTick(now)
+     }

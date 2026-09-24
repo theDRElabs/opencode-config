@@ -1,0 +1,77 @@
+{
+  "suite": "fresh-review",
+  "tier": "deterministic",
+  "trials": 3,
+  "timestamp": "20260916-023016",
+  "case_count": 5,
+  "consistency_pct": 100,
+  "non_deterministic_cases": [],
+  "cases": {
+    "syntax": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "seeded-review": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "result-contract": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "complete-inputs": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "config-contract": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    }
+  },
+  "per_trial": [
+    {
+      "trial": 1,
+      "cases": 5,
+      "pass": 5,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    },
+    {
+      "trial": 2,
+      "cases": 5,
+      "pass": 5,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    },
+    {
+      "trial": 3,
+      "cases": 5,
+      "pass": 5,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    }
+  ]
+}

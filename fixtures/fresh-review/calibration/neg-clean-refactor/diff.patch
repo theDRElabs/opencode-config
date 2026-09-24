@@ -1,0 +1,38 @@
+diff --git a/src/format.js b/src/format.js
+@@
+-export function formatBytes(bytes) {
+-  if (bytes < 1024) return `${bytes} B`;
+-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+-}
++const UNITS = [
++  { limit: 1024, divisor: 1, suffix: 'B', digits: 0 },
++  { limit: 1024 * 1024, divisor: 1024, suffix: 'KB', digits: 1 },
++  { limit: Infinity, divisor: 1024 * 1024, suffix: 'MB', digits: 1 },
++];
++
++function pickUnit(bytes) {
++  return UNITS.find((unit) => bytes < unit.limit);
++}
++
++export function formatBytes(bytes) {
++  const { divisor, suffix, digits } = pickUnit(bytes);
++  return `${(bytes / divisor).toFixed(digits)} ${suffix}`;
++}
+diff --git a/test/format.test.js b/test/format.test.js
+@@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++import { formatBytes } from '../src/format.js';
++
++test('formats bytes', () => {
++  assert.strictEqual(formatBytes(512), '512 B');
++});
++
++test('formats kilobytes', () => {
++  assert.strictEqual(formatBytes(2048), '2.0 KB');
++});
++
++test('formats megabytes', () => {
++  assert.strictEqual(formatBytes(5 * 1024 * 1024), '5.0 MB');
++});

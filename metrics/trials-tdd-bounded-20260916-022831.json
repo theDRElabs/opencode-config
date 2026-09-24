@@ -1,0 +1,125 @@
+{
+  "suite": "tdd-bounded",
+  "tier": "deterministic",
+  "trials": 3,
+  "timestamp": "20260916-022831",
+  "case_count": 11,
+  "consistency_pct": 100,
+  "non_deterministic_cases": [],
+  "cases": {
+    "domain-red": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "domain-green": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "domain-refactor": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "migration-red": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "migration-green": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "migration-refactor": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "bug-fix-red": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "bug-fix-green": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "bug-fix-refactor": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "blocking-failure": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "ambiguity-rejected": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    }
+  },
+  "per_trial": [
+    {
+      "trial": 1,
+      "cases": 11,
+      "pass": 11,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    },
+    {
+      "trial": 2,
+      "cases": 11,
+      "pass": 11,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    },
+    {
+      "trial": 3,
+      "cases": 11,
+      "pass": 11,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    }
+  ]
+}

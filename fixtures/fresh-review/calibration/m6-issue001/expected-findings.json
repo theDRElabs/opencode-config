@@ -1,0 +1,31 @@
+{
+  "case": "m6-issue001",
+  "verdict": "PASS",
+  "source_review": "runs/data-check/M6/ISSUE-001/attempt-1/review.md",
+  "pending_hand_grade": true,
+  "findings": [],
+  "non_blocking_notes": [
+    {
+      "id": "NB1",
+      "severity": "medium",
+      "path": "app/build.gradle.kts",
+      "line": 11,
+      "kind": "config-phase-coupling"
+    },
+    {
+      "id": "NB2",
+      "severity": "low",
+      "path": ".github/workflows/ci.yml",
+      "line": 33,
+      "kind": "mutable-action-tag"
+    },
+    {
+      "id": "NB3",
+      "severity": "low",
+      "path": ".github/workflows/ci.yml",
+      "line": 47,
+      "kind": "single-apk-assumption"
+    }
+  ],
+  "scoring_note": "Historical non-blocking notes retained for reference only. The judge is an independent reviewer, so its non-blocking observations are not scored; the verdict is the scored signal for this case."
+}
