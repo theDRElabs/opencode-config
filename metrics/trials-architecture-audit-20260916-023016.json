@@ -1,0 +1,69 @@
+{
+  "suite": "architecture-audit",
+  "tier": "deterministic",
+  "trials": 3,
+  "timestamp": "20260916-023016",
+  "case_count": 4,
+  "consistency_pct": 100,
+  "non_deterministic_cases": [],
+  "cases": {
+    "syntax": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "contract": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "seeded-detection": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "real-project-audit": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    }
+  },
+  "per_trial": [
+    {
+      "trial": 1,
+      "cases": 4,
+      "pass": 4,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    },
+    {
+      "trial": 2,
+      "cases": 4,
+      "pass": 4,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    },
+    {
+      "trial": 3,
+      "cases": 4,
+      "pass": 4,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    }
+  ]
+}

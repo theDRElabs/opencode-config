@@ -1,0 +1,133 @@
+{
+  "suite": "parallel-afk-runner",
+  "tier": "deterministic",
+  "trials": 3,
+  "timestamp": "20260916-023016",
+  "case_count": 12,
+  "consistency_pct": 100,
+  "non_deterministic_cases": [],
+  "cases": {
+    "syntax-orchestrator": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "syntax-test": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "syntax-adapter": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "syntax-stage-adapter": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "syntax-full-check": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "syntax-record": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "syntax-shell": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "namespace-free": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "no-remote-mutation": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "cli-dry-run": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "cli-dry-run-plan": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    },
+    "scenarios": {
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "agreement": 1
+    }
+  },
+  "per_trial": [
+    {
+      "trial": 1,
+      "cases": 12,
+      "pass": 12,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    },
+    {
+      "trial": 2,
+      "cases": 12,
+      "pass": 12,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    },
+    {
+      "trial": 3,
+      "cases": 12,
+      "pass": 12,
+      "fail": 0,
+      "known_fail": 0,
+      "mean_score": 1
+    }
+  ]
+}

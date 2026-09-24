@@ -1,0 +1,7 @@
+{
+  "case": "neg-test-addition",
+  "verdict": "PASS",
+  "control": "negative",
+  "pending_hand_grade": true,
+  "findings": []
+}

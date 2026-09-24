@@ -1,0 +1,260 @@
+commit 7c3053db34be0d2b155b5b20de2e14126d2366ab
+Author: DRE <144799227+theDRElabs@users.noreply.github.com>
+Date:   Fri Sep 11 12:00:29 2026 +0000
+
+    Bundle counts from entry time, not renewal-cycle start (M6 ISSUE-007 phase 2)
+
+diff --git a/app/src/main/java/com/drelabs/datacheck/data/BundleLogic.kt b/app/src/main/java/com/drelabs/datacheck/data/BundleLogic.kt
+index c05972e..da9cbc2 100644
+--- a/app/src/main/java/com/drelabs/datacheck/data/BundleLogic.kt
++++ b/app/src/main/java/com/drelabs/datacheck/data/BundleLogic.kt
+@@ -1,6 +1,7 @@
+ package com.drelabs.datacheck.data
+ 
+ import java.time.LocalDate
++import java.time.temporal.ChronoUnit
+ 
+ /**
+  * Pure logic for the bundle card baseline (ISSUE-007).
+@@ -42,13 +43,13 @@ object BundleLogic {
+     /**
+      * Sum of usage rows with tickStart >= [entryAtMs]: usage before the
+      * entry is not part of the bundle baseline. Executable spec for the
+-     * DAO call totalsSince(entryAtMs) the dashboard makes in phase 2.
+-     *
+-     * STUB (ISSUE-007 phase 1 RED): always returns 0 so the tests fail
+-     * at runtime; phase 2 implements the real window filter.
++     * DAO call totalsSince(entryAtMs) the dashboard makes (same `>=`
++     * window: UsageLogDao totalsSince).
+      */
+     fun usageSinceEntry(rows: List<UsageRow>, entryAtMs: Long): Long {
+-        return 0L
++        return rows.asSequence()
++            .filter { it.tickStart >= entryAtMs }
++            .sumOf { it.total }
+     }
+ 
+     /**
+@@ -60,10 +61,6 @@ object BundleLogic {
+      * - pct = usedBytes / bundleBytes coerced to [0, 1]
+      * - daysLeft is derived from today + renewalDay only, never from
+      *   the entry timestamp.
+-     *
+-     * STUB (ISSUE-007 phase 1 RED): always returns a zeroed Values so
+-     * the tests fail at runtime; phase 2 implements the real
+-     * computation with these exact signatures.
+      */
+     fun buildState(
+         bundleBytes: Long,
+@@ -73,12 +70,23 @@ object BundleLogic {
+         today: LocalDate,
+         renewalDay: Int,
+     ): CardState {
++        if (bundleBytes <= 0L || entryAtMs <= 0L) return CardState.Hidden
++        val used = if (entryAtMs > nowMs) 0L else usedSinceEntryBytes
++        val left = (bundleBytes - used).coerceAtLeast(0L)
++        val pct = (used.toDouble() / bundleBytes).toFloat().coerceIn(0f, 1f)
++        val day = renewalDay.coerceIn(1, 28)
++        val cycleStart = if (today.dayOfMonth >= day) {
++            today.withDayOfMonth(day)
++        } else {
++            today.minusMonths(1).withDayOfMonth(day)
++        }
++        val daysLeft = ChronoUnit.DAYS.between(today, cycleStart.plusMonths(1))
+         return CardState.Values(
+-            bundleBytes = 0L,
+-            usedBytes = 0L,
+-            leftBytes = 0L,
+-            pct = 0f,
+-            daysLeft = 0L,
++            bundleBytes = bundleBytes,
++            usedBytes = used,
++            leftBytes = left,
++            pct = pct,
++            daysLeft = daysLeft,
+         )
+     }
+ }
+diff --git a/app/src/main/java/com/drelabs/datacheck/data/Prefs.kt b/app/src/main/java/com/drelabs/datacheck/data/Prefs.kt
+index 79d2166..396876b 100644
+--- a/app/src/main/java/com/drelabs/datacheck/data/Prefs.kt
++++ b/app/src/main/java/com/drelabs/datacheck/data/Prefs.kt
+@@ -32,6 +32,13 @@ class Prefs(context: Context) {
+             sp.edit().putLong(KEY_BUNDLE, value).commit()
+         }
+ 
++    /** Wall-clock ms when the bundle figure was last saved; 0 = never stamped. */
++    var bundleEntryAtMs: Long
++        get() = sp.getLong(KEY_BUNDLE_ENTRY, 0L)
++        set(value) {
++            sp.edit().putLong(KEY_BUNDLE_ENTRY, value).commit()
++        }
++
+     var bundleRenewalDay: Int
+         get() = sp.getInt(KEY_RENEWAL, 1)
+         set(value) {
+@@ -49,6 +56,7 @@ class Prefs(context: Context) {
+         private const val KEY_REBOOT = "reboot_pending"
+         private const val KEY_INTERVAL = "ping_interval_minutes"
+         private const val KEY_BUNDLE = "bundle_bytes"
++        private const val KEY_BUNDLE_ENTRY = "bundle_entry_at_ms"
+         private const val KEY_RENEWAL = "bundle_renewal_day"
+         private const val KEY_VALIDATION = "show_validation_card"
+     }
+diff --git a/app/src/main/java/com/drelabs/datacheck/ui/dashboard/DashboardScreen.kt b/app/src/main/java/com/drelabs/datacheck/ui/dashboard/DashboardScreen.kt
+index afab662..32d53a3 100644
+--- a/app/src/main/java/com/drelabs/datacheck/ui/dashboard/DashboardScreen.kt
++++ b/app/src/main/java/com/drelabs/datacheck/ui/dashboard/DashboardScreen.kt
+@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
+ import androidx.compose.ui.platform.LocalContext
+ import androidx.compose.ui.unit.dp
++import com.drelabs.datacheck.data.BundleLogic
+ import com.drelabs.datacheck.data.CsvExporter
+ import com.drelabs.datacheck.data.Prefs
+ import com.drelabs.datacheck.data.Validation
+@@ -52,10 +53,7 @@ data class DashboardData(
+     val lastWindowDelta: Long,
+     val topAppsToday: List<AppUsageRow>,
+     val daily: List<Pair<LocalDate, Long>>,
+-    val bundleBytes: Long = 0,
+-    val bundleUsed: Long = 0,
+-    val bundlePct: Float = 0f,
+-    val bundleDaysLeft: Long = 0,
++    val bundle: BundleLogic.CardState = BundleLogic.CardState.Hidden,
+     val validation: Validation.CardState = Validation.CardState.Hidden,
+ )
+ 
+@@ -113,26 +111,29 @@ fun DashboardScreen(onOpenSettings: () -> Unit = {}) {
+                 }
+             }
+ 
+-            if (d.bundleBytes > 0) {
+-                Card(modifier = Modifier.fillMaxWidth()) {
+-                    Column(Modifier.padding(16.dp), Arrangement.spacedBy(6.dp)) {
+-                        Row(
+-                            Modifier.fillMaxWidth(),
+-                            horizontalArrangement = Arrangement.SpaceBetween,
+-                        ) {
+-                            Text("Bundle", style = MaterialTheme.typography.labelMedium)
+-                            Text("${(d.bundlePct * 100).toInt()}%", style = MaterialTheme.typography.labelMedium)
++            when (val b = d.bundle) {
++                BundleLogic.CardState.Hidden -> {}
++                is BundleLogic.CardState.Values -> {
++                    Card(modifier = Modifier.fillMaxWidth()) {
++                        Column(Modifier.padding(16.dp), Arrangement.spacedBy(6.dp)) {
++                            Row(
++                                Modifier.fillMaxWidth(),
++                                horizontalArrangement = Arrangement.SpaceBetween,
++                            ) {
++                                Text("Bundle", style = MaterialTheme.typography.labelMedium)
++                                Text("${(b.pct * 100).toInt()}%", style = MaterialTheme.typography.labelMedium)
++                            }
++                            LinearProgressIndicator(
++                                progress = { b.pct },
++                                modifier = Modifier.fillMaxWidth(),
++                            )
++                            Text(
++                                "${Format.bytes(b.usedBytes)} used since you saved · " +
++                                    "${Format.bytes(b.leftBytes)} left · " +
++                                    "${b.daysLeft}d to renewal",
++                                style = MaterialTheme.typography.bodySmall,
++                            )
+                         }
+-                        LinearProgressIndicator(
+-                            progress = { d.bundlePct },
+-                            modifier = Modifier.fillMaxWidth(),
+-                        )
+-                        Text(
+-                            "${Format.bytes(d.bundleUsed)} of ${Format.bytes(d.bundleBytes)} used · " +
+-                                "${Format.bytes((d.bundleBytes - d.bundleUsed).coerceAtLeast(0))} left · " +
+-                                "${d.bundleDaysLeft}d to renewal",
+-                            style = MaterialTheme.typography.bodySmall,
+-                        )
+                     }
+                 }
+             }
+@@ -288,17 +289,20 @@ private suspend fun loadDashboard(context: Context): DashboardData {
+         .map { (day, rows) -> day to rows.sumOf { it.total } }
+         .sortedBy { it.first }
+ 
+-    val bundle = prefs.bundleBytes
+-    var bundleUsed = 0L
+-    var bundlePct = 0f
+-    var daysLeft = 0L
+-    if (bundle > 0) {
+-        val cycleStart = cycleStart(today, prefs.bundleRenewalDay)
+-        bundleUsed = dao.totalsSince(cycleStart.atStartOfDay(zone).toInstant().toEpochMilli())
+-            ?.total ?: 0L
+-        bundlePct = (bundleUsed.toDouble() / bundle).toFloat().coerceIn(0f, 1f)
+-        daysLeft = java.time.temporal.ChronoUnit.DAYS.between(today, cycleStart.plusMonths(1))
++    val entryAtMs = prefs.bundleEntryAtMs
++    val usedSinceEntry = if (entryAtMs > 0) {
++        dao.totalsSince(entryAtMs)?.total ?: 0L
++    } else {
++        0L
+     }
++    val bundle = BundleLogic.buildState(
++        bundleBytes = prefs.bundleBytes,
++        entryAtMs = entryAtMs,
++        usedSinceEntryBytes = usedSinceEntry,
++        nowMs = System.currentTimeMillis(),
++        today = today,
++        renewalDay = prefs.bundleRenewalDay,
++    )
+ 
+     val validation = if (prefs.showValidationCard) {
+         Validation.buildState(
+@@ -317,16 +321,7 @@ private suspend fun loadDashboard(context: Context): DashboardData {
+         lastWindowDelta = dao.latestTickTotal()?.total ?: 0L,
+         topAppsToday = dao.topAppsSince(midnight, 10),
+         daily = daily,
+-        bundleBytes = bundle,
+-        bundleUsed = bundleUsed,
+-        bundlePct = bundlePct,
+-        bundleDaysLeft = daysLeft,
++        bundle = bundle,
+         validation = validation,
+     )
+ }
+-
+-private fun cycleStart(today: LocalDate, renewalDay: Int): LocalDate {
+-    val day = renewalDay.coerceIn(1, 28)
+-    return if (today.dayOfMonth >= day) today.withDayOfMonth(day)
+-    else today.minusMonths(1).withDayOfMonth(day)
+-}
+diff --git a/app/src/main/java/com/drelabs/datacheck/ui/settings/SettingsScreen.kt b/app/src/main/java/com/drelabs/datacheck/ui/settings/SettingsScreen.kt
+index 143e6ee..7ba1ee0 100644
+--- a/app/src/main/java/com/drelabs/datacheck/ui/settings/SettingsScreen.kt
++++ b/app/src/main/java/com/drelabs/datacheck/ui/settings/SettingsScreen.kt
+@@ -100,10 +100,21 @@ fun SettingsScreen(onBack: () -> Unit) {
+         OutlinedTextField(
+             value = sizeText,
+             onValueChange = { sizeText = it },
+-            label = { Text("Bundle size") },
++            label = { Text("Data left right now") },
+             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+             modifier = Modifier.fillMaxWidth(),
+         )
++        Text(
++            "How much data you have left — counting starts when you save.",
++            style = MaterialTheme.typography.bodySmall,
++        )
++        if (prefs.bundleBytes > 0 && prefs.bundleEntryAtMs == 0L) {
++            Text(
++                "Your saved figure isn't counted yet — tap Save to start counting from now.",
++                style = MaterialTheme.typography.bodySmall,
++                color = MaterialTheme.colorScheme.primary,
++            )
++        }
+         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+             FilterChip(
+                 selected = unitIsGb,
+@@ -131,6 +142,7 @@ fun SettingsScreen(onBack: () -> Unit) {
+                 } else {
+                     0L
+                 }
++                prefs.bundleEntryAtMs = System.currentTimeMillis()
+                 prefs.bundleRenewalDay = renewalDay.toIntOrNull()?.coerceIn(1, 28) ?: 1
+                 saved = true
+             }) {

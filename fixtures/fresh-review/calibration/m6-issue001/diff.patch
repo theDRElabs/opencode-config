@@ -1,0 +1,131 @@
+commit cbbb5fa8abb32cf5bb8f244fc2c38db7549d3edb
+Author: DRE <144799227+theDRElabs@users.noreply.github.com>
+Date:   Thu Sep 10 13:09:45 2026 +0000
+
+    Signed, size-gated release APK from CI (M6 ISSUE-001)
+    
+    - Release buildType: minify + resource shrinking, PKCS12 signing from
+      committed keystore/ (self-signed, personal sideload app)
+    - CI release job: assembleRelease, 4 MiB hard size gate, uploads
+      datacheck-release-apk artifact; debug job unchanged
+    - Proguard keeps for WorkManager/Room/Compose under R8
+
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 86bb522..6de8760 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -26,3 +26,34 @@ jobs:
+         with:
+           name: datacheck-debug-apk
+           path: app/build/outputs/apk/debug/*.apk
++
++  release:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++
++      - uses: actions/setup-java@v4
++        with:
++          distribution: temurin
++          java-version: 17
++
++      - uses: gradle/actions/setup-gradle@v4
++
++      - name: Build signed release APK
++        run: ./gradlew assembleRelease --stacktrace
++
++      - name: Enforce release APK size limit (4 MiB)
++        run: |
++          APK="$(ls app/build/outputs/apk/release/*.apk)"
++          SIZE="$(stat -c%s "$APK")"
++          echo "Release APK: $APK — $SIZE bytes (gate: must be < 4194304 bytes)"
++          if [ "$SIZE" -ge 4194304 ]; then
++            echo "::error::Release APK is $SIZE bytes, >= the 4194304-byte (4 MiB) limit"
++            exit 1
++          fi
++
++      - name: Upload release APK
++        uses: actions/upload-artifact@v4
++        with:
++          name: datacheck-release-apk
++          path: app/build/outputs/apk/release/*.apk
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index 6247281..b2f0436 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -5,6 +5,13 @@ plugins {
+     id("com.google.devtools.ksp")
+ }
+ 
++// Release signing: self-signed PKCS12 keystore committed to the repo
++// (personal sideload app — see AGENTS.md). Passwords live alongside in
++// keystore/keystore.properties; PKCS12 uses a single password for store+key.
++val releaseKeystoreProperties = java.util.Properties().apply {
++    rootProject.file("keystore/keystore.properties").inputStream().use { load(it) }
++}
++
+ android {
+     namespace = "com.drelabs.datacheck"
+     compileSdk = 35
+@@ -17,11 +24,22 @@ android {
+         versionName = "0.1.0"
+     }
+ 
++    signingConfigs {
++        create("release") {
++            storeFile = rootProject.file(releaseKeystoreProperties.getProperty("storeFile"))
++            storeType = releaseKeystoreProperties.getProperty("storeType")
++            storePassword = releaseKeystoreProperties.getProperty("storePassword")
++            keyAlias = releaseKeystoreProperties.getProperty("keyAlias")
++            keyPassword = releaseKeystoreProperties.getProperty("keyPassword")
++        }
++    }
++
+     buildTypes {
+         release {
+             isMinifyEnabled = true
+             isShrinkResources = true
+             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
++            signingConfig = signingConfigs.getByName("release")
+         }
+     }
+ 
+diff --git a/app/proguard-rules.pro b/app/proguard-rules.pro
+index 560cc5e..d7bb2fe 100644
+--- a/app/proguard-rules.pro
++++ b/app/proguard-rules.pro
+@@ -1 +1,19 @@
+ # DataCheck keeps Room entities and WorkManager workers; keep default rules.
++
++# WorkManager instantiates ListenableWorker subclasses reflectively via its
++# WorkerFactory; keep the app's workers and their public constructors.
++-keep class * extends androidx.work.ListenableWorker {
++    public <init>(...);
++}
++
++# Room resolves the generated <Database>_Impl class via reflection; keep
++# RoomDatabase subclasses and their constructors.
++-keep class * extends androidx.room.RoomDatabase {
++    <init>();
++}
++
++# Room maps columns to entity fields through generated mappers; keep annotated
++# entities (class + field names) so column mapping survives R8 renaming.
++-keep @androidx.room.Entity class * {
++    <fields>;
++}
+diff --git a/keystore/datacheck-release.p12 b/keystore/datacheck-release.p12
+new file mode 100644
+index 0000000..84b1412
+Binary files /dev/null and b/keystore/datacheck-release.p12 differ
+diff --git a/keystore/keystore.properties b/keystore/keystore.properties
+new file mode 100644
+index 0000000..60c2524
+--- /dev/null
++++ b/keystore/keystore.properties
+@@ -0,0 +1,5 @@
++storeFile=keystore/datacheck-release.p12
++storeType=PKCS12
++storePassword=iMtzs8y+h6pZ3vlUcj7m6klO
++keyAlias=datacheck-release
++keyPassword=iMtzs8y+h6pZ3vlUcj7m6klO

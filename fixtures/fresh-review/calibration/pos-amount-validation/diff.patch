@@ -1,0 +1,16 @@
+diff --git a/src/order.js b/src/order.js
+@@
++export async function applyDiscount(order, repository) {
++  const total = order.subtotal - order.discount;
++  await repository.save({ ...order, total });
++  return { status: 200, total };
++}
+diff --git a/test/order.test.js b/test/order.test.js
+@@
++test('applies discount', async () => {
++  const result = await applyDiscount(order, repository);
++  assert.ok(result);
++});
+diff --git a/src/unrelated.js b/src/unrelated.js
+@@
++export const unrelatedCleanup = true;

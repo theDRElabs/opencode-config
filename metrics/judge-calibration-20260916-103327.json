@@ -1,0 +1,401 @@
+{
+  "phase": 19,
+  "kind": "judge-calibration",
+  "timestamp": "20260916-103327",
+  "judge": {
+    "model": "xkiro/deepseek/deepseek-v4-flash",
+    "agent": "default",
+    "skill_version": "fresh-context-review@2026-09-16"
+  },
+  "corpus": {
+    "dir": "/home/ubuntu/.config/opencode/fixtures/fresh-review/calibration",
+    "cases": 13
+  },
+  "aggregate": {
+    "cases": 13,
+    "verdict_match_rate": 0.8462,
+    "mean_recall": 0.5833,
+    "mean_precision": 0.5833,
+    "unknown_rate": 0.1538,
+    "ambiguous_unknown_rate": 1,
+    "verdict_counts": {
+      "PASS": 5,
+      "FAIL": 6,
+      "UNKNOWN": 2
+    }
+  },
+  "per_case": [
+    {
+      "case": "m6-issue001",
+      "expected_verdict": "PASS",
+      "actual_verdict": "PASS",
+      "verdict_match": true,
+      "control": null,
+      "expected_findings": 0,
+      "findings_scored": false,
+      "detected_findings": 1,
+      "recall": 1,
+      "precision": 0,
+      "matched": 0,
+      "missing": [],
+      "spurious": [
+        ".github/workflows/ci.yml:50"
+      ],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 98,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/m6-issue001.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    },
+    {
+      "case": "m6-issue002",
+      "expected_verdict": "PASS",
+      "actual_verdict": "PASS",
+      "verdict_match": true,
+      "control": null,
+      "expected_findings": 0,
+      "findings_scored": false,
+      "detected_findings": 0,
+      "recall": 1,
+      "precision": 1,
+      "matched": 0,
+      "missing": [],
+      "spurious": [],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 100,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/m6-issue002.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    },
+    {
+      "case": "m6-issue006",
+      "expected_verdict": "PASS",
+      "actual_verdict": "PASS",
+      "verdict_match": true,
+      "control": null,
+      "expected_findings": 0,
+      "findings_scored": false,
+      "detected_findings": 0,
+      "recall": 1,
+      "precision": 1,
+      "matched": 0,
+      "missing": [],
+      "spurious": [],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 132,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/m6-issue006.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    },
+    {
+      "case": "m6-issue007",
+      "expected_verdict": "PASS",
+      "actual_verdict": "PASS",
+      "verdict_match": true,
+      "control": null,
+      "expected_findings": 0,
+      "findings_scored": false,
+      "detected_findings": 0,
+      "recall": 1,
+      "precision": 1,
+      "matched": 0,
+      "missing": [],
+      "spurious": [],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 92,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/m6-issue007.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    },
+    {
+      "case": "m6-issue008",
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_match": true,
+      "control": null,
+      "expected_findings": 1,
+      "findings_scored": true,
+      "detected_findings": 2,
+      "recall": 0,
+      "precision": 0,
+      "matched": 0,
+      "missing": [
+        "app/src/main/java/com/drelabs/datacheck/data/db/UsageLogDao.kt:38:missing-ci-green-verification"
+      ],
+      "spurious": [
+        "app/src/test/java/com/drelabs/datacheck/UsageLogDaoSqlGuardTest.kt:39",
+        "app/src/test/java/com/drelabs/datacheck/UsageLogDaoSqlGuardTest.kt:38"
+      ],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 78,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/m6-issue008.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    },
+    {
+      "case": "neg-clean-refactor",
+      "expected_verdict": "PASS",
+      "actual_verdict": "FAIL",
+      "verdict_match": false,
+      "control": "negative",
+      "expected_findings": 0,
+      "findings_scored": false,
+      "detected_findings": 2,
+      "recall": 1,
+      "precision": 0,
+      "matched": 0,
+      "missing": [],
+      "spurious": [
+        "src/format.js:12",
+        "src/format.js:2"
+      ],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 66,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/neg-clean-refactor.out.txt",
+      "parse_error": null,
+      "hypothesis": "expected PASS, judge returned FAIL; 2 spurious finding(s)"
+    },
+    {
+      "case": "neg-doc-only",
+      "expected_verdict": "PASS",
+      "actual_verdict": "FAIL",
+      "verdict_match": false,
+      "control": "negative",
+      "expected_findings": 0,
+      "findings_scored": false,
+      "detected_findings": 1,
+      "recall": 1,
+      "precision": 0,
+      "matched": 0,
+      "missing": [],
+      "spurious": [
+        "README.md:5"
+      ],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 52,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/neg-doc-only.out.txt",
+      "parse_error": null,
+      "hypothesis": "expected PASS, judge returned FAIL; 1 spurious finding(s)"
+    },
+    {
+      "case": "neg-test-addition",
+      "expected_verdict": "PASS",
+      "actual_verdict": "PASS",
+      "verdict_match": true,
+      "control": "negative",
+      "expected_findings": 0,
+      "findings_scored": false,
+      "detected_findings": 0,
+      "recall": 1,
+      "precision": 1,
+      "matched": 0,
+      "missing": [],
+      "spurious": [],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 66,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/neg-test-addition.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    },
+    {
+      "case": "pos-amount-validation",
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_match": true,
+      "control": "positive",
+      "expected_findings": 4,
+      "findings_scored": true,
+      "detected_findings": 6,
+      "recall": 1,
+      "precision": 0.6667,
+      "matched": 4,
+      "missing": [],
+      "spurious": [
+        "src/order.js:3",
+        "src/order.js:1"
+      ],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 56,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/pos-amount-validation.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    },
+    {
+      "case": "pos-swallowed-upload",
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_match": true,
+      "control": "positive",
+      "expected_findings": 3,
+      "findings_scored": true,
+      "detected_findings": 3,
+      "recall": 0.6667,
+      "precision": 0.6667,
+      "matched": 2,
+      "missing": [
+        "verification.log:8:uncovered-regression"
+      ],
+      "spurious": [
+        "test/upload.test.js:1"
+      ],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 46,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/pos-swallowed-upload.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    },
+    {
+      "case": "seeded-review",
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_match": true,
+      "control": null,
+      "expected_findings": 6,
+      "findings_scored": true,
+      "detected_findings": 4,
+      "recall": 0.6667,
+      "precision": 1,
+      "matched": 4,
+      "missing": [
+        "src/profile.js:3:behavioral-gap",
+        "verification.log:8:uncovered-regression"
+      ],
+      "spurious": [],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 77,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/seeded-review.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    },
+    {
+      "case": "unknown-external-contract",
+      "expected_verdict": "UNKNOWN",
+      "actual_verdict": "UNKNOWN",
+      "verdict_match": true,
+      "control": "unknown",
+      "expected_findings": 0,
+      "findings_scored": false,
+      "detected_findings": 3,
+      "recall": 1,
+      "precision": 0,
+      "matched": 0,
+      "missing": [],
+      "spurious": [
+        "src/profile.js:2",
+        "src/profile.js:2",
+        "verification.log:8"
+      ],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 49,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/unknown-external-contract.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    },
+    {
+      "case": "unknown-locked-clamp",
+      "expected_verdict": "UNKNOWN",
+      "actual_verdict": "UNKNOWN",
+      "verdict_match": true,
+      "control": "unknown",
+      "expected_findings": 0,
+      "findings_scored": false,
+      "detected_findings": 3,
+      "recall": 1,
+      "precision": 0,
+      "matched": 0,
+      "missing": [],
+      "spurious": [
+        "src/sampling.js:1",
+        "src/sampling.js:5",
+        "src/sampling.js:1"
+      ],
+      "judge_version": "fresh-context-review@2026-09-16",
+      "duration_s": 49,
+      "raw_out": "/tmp/opencode/judge-cal-20260916-103327/unknown-locked-clamp.out.txt",
+      "parse_error": null,
+      "hypothesis": null
+    }
+  ],
+  "disagreements": [
+    {
+      "case": "m6-issue008",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "expected_findings": 1,
+      "detected_findings": 2,
+      "missing": [
+        "app/src/main/java/com/drelabs/datacheck/data/db/UsageLogDao.kt:38:missing-ci-green-verification"
+      ],
+      "spurious": [
+        "app/src/test/java/com/drelabs/datacheck/UsageLogDaoSqlGuardTest.kt:39",
+        "app/src/test/java/com/drelabs/datacheck/UsageLogDaoSqlGuardTest.kt:38"
+      ],
+      "hypothesis": "verdict and/or finding set differs from the expected-findings.json ground truth"
+    },
+    {
+      "case": "neg-clean-refactor",
+      "expected": "PASS",
+      "actual": "FAIL",
+      "expected_findings": 0,
+      "detected_findings": 2,
+      "missing": [],
+      "spurious": [
+        "src/format.js:12",
+        "src/format.js:2"
+      ],
+      "hypothesis": "verdict and/or finding set differs from the expected-findings.json ground truth"
+    },
+    {
+      "case": "neg-doc-only",
+      "expected": "PASS",
+      "actual": "FAIL",
+      "expected_findings": 0,
+      "detected_findings": 1,
+      "missing": [],
+      "spurious": [
+        "README.md:5"
+      ],
+      "hypothesis": "verdict and/or finding set differs from the expected-findings.json ground truth"
+    },
+    {
+      "case": "pos-amount-validation",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "expected_findings": 4,
+      "detected_findings": 6,
+      "missing": [],
+      "spurious": [
+        "src/order.js:3",
+        "src/order.js:1"
+      ],
+      "hypothesis": "verdict and/or finding set differs from the expected-findings.json ground truth"
+    },
+    {
+      "case": "pos-swallowed-upload",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "expected_findings": 3,
+      "detected_findings": 3,
+      "missing": [
+        "verification.log:8:uncovered-regression"
+      ],
+      "spurious": [
+        "test/upload.test.js:1"
+      ],
+      "hypothesis": "verdict and/or finding set differs from the expected-findings.json ground truth"
+    },
+    {
+      "case": "seeded-review",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "expected_findings": 6,
+      "detected_findings": 4,
+      "missing": [
+        "src/profile.js:3:behavioral-gap",
+        "verification.log:8:uncovered-regression"
+      ],
+      "spurious": [],
+      "hypothesis": "verdict and/or finding set differs from the expected-findings.json ground truth"
+    }
+  ]
+}

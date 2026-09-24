@@ -1,0 +1,11 @@
+{
+  "verdict": "FAIL",
+  "findings": [
+    {"id":"F1","severity":"critical","path":"src/profile.js","line":3,"kind":"authorization"},
+    {"id":"F2","severity":"high","path":"src/profile.js","line":6,"kind":"swallowed-error"},
+    {"id":"F3","severity":"high","path":"test/profile.test.js","line":3,"kind":"weak-test"},
+    {"id":"F4","severity":"high","path":"src/profile.js","line":3,"kind":"behavioral-gap"},
+    {"id":"F5","severity":"medium","path":"src/unrelated.js","line":1,"kind":"unrelated-change"},
+    {"id":"F6","severity":"medium","path":"verification.log","line":8,"kind":"uncovered-regression"}
+  ]
+}

@@ -9,6 +9,21 @@ Use this skill after one bounded implementation and its project-feedback checks.
 The reviewer must be a new context that did not produce the implementation. Review
 is read-only and is not human acceptance.
 
+## Judge Protocol (calibration)
+
+When the reviewer acts as a calibration judge, three rules are mandatory:
+
+1. **Version stamp.** Every judge output carries a `Judge Version Stamp` section
+   naming the model id, the skill/prompt version, and the UTC date. A verdict
+   without a version stamp is not admissible calibration evidence.
+2. **One dimension per invocation.** Grade exactly one dimension per judge run
+   (correctness, completeness, or style). If a review would grade more than one,
+   split it into separate judge passes and report each dimension separately.
+   Never blend dimensions into a single verdict.
+3. **Unknown escape.** Return `UNKNOWN` when the evidence in the diff, sources,
+   and verification records is insufficient to decide. Never fabricate a verdict
+   to avoid returning `UNKNOWN`.
+
 ## Entry Gate
 
 Require these complete inputs before reviewing:
@@ -20,7 +35,9 @@ Require these complete inputs before reviewing:
   duration, exit codes, results, and complete log or artifact paths.
 
 Return `BLOCKED` when an input is absent or selected excerpts replace available
-complete evidence. Do not infer omitted requirements, inspect producer chat, or ask
+complete evidence. Return `UNKNOWN` when every required input is present but the
+evidence is insufficient to decide a verdict — an unverifiable assumption is not
+a basis for `PASS` or `FAIL`. Do not infer omitted requirements, inspect producer chat, or ask
 the producing context to explain its intent.
 
 ## Independence and Permissions
@@ -69,7 +86,7 @@ uncovered regression makes the verdict `FAIL` or `BLOCKED`, never `PASS`.
 
 Return exactly these sections:
 
-1. `Verdict`: `PASS`, `FAIL`, or `BLOCKED`, with one factual reason.
+1. `Verdict`: `PASS`, `FAIL`, `BLOCKED`, or `UNKNOWN`, with one factual reason.
 2. `Blocking Findings`: severity-ordered findings, each with `path:line`, issue,
    impact, evidence, and required change; write `None` only when justified.
 3. `Non-Blocking Findings`: same shape, or `None`.
@@ -80,6 +97,7 @@ Return exactly these sections:
    failures, omissions, misleading claims, and whether evidence supports the verdict.
 7. `Residual Risks`: risks remaining after the review, including unavailable checks
    and human QA needs; never claim human acceptance.
+8. `Judge Version Stamp`: model id, skill/prompt version, and UTC date of the run.
 
 If there are no findings, say so explicitly but still return every section. The
 review result is an independent engineering assessment, not issue completion, merge

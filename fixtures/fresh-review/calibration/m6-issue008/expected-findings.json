@@ -1,0 +1,38 @@
+{
+  "case": "m6-issue008",
+  "verdict": "FAIL",
+  "source_review": "runs/data-check/M6/ISSUE-008/attempt-1/review.md",
+  "pending_hand_grade": false,
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "high",
+      "path": "app/src/main/java/com/drelabs/datacheck/data/db/UsageLogDao.kt",
+      "line": 38,
+      "kind": "missing-ci-green-verification"
+    }
+  ],
+  "non_blocking_notes": [
+    {
+      "id": "NB1",
+      "severity": "low",
+      "path": "app/src/test/java/com/drelabs/datacheck/UsageLogDaoSqlGuardTest.kt",
+      "line": 1,
+      "kind": "red-only-statically-proven"
+    },
+    {
+      "id": "NB4",
+      "severity": "low",
+      "path": "app/src/test/java/com/drelabs/datacheck/UsageLogDaoSqlGuardTest.kt",
+      "line": 11,
+      "kind": "structural-not-behavioral"
+    }
+  ],
+  "scoring_note": "Historical non-blocking notes retained for reference only. The judge is an independent reviewer, so its non-blocking observations are not scored; the verdict is the scored signal for this case.",
+  "hand_grade": {
+    "date": "2026-09-16",
+    "by": "user-confirmed",
+    "decision": "Set to FAIL. The historical review PASSed only because the orchestrator verified a CI-green run out-of-band; that evidence is absent from the packaged bundle, so for this case as bundled the honest verdict is FAIL on AC5 (no observed CI-green for the final source-file pin, and the corrected pin never ran red in CI either).",
+    "historical_review_note": "runs/data-check/M6/ISSUE-008/attempt-1/review.md records the CI run IDs as producer-reported and not re-executable."
+  }
+}
