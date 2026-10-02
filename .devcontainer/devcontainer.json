@@ -18,7 +18,7 @@
   "remoteEnv": {
     "CFGDIR": "${containerEnv:HOME}/.config/opencode"
   },
-  "postCreateCommand": "bash ~/.config/opencode/bootstrap.sh",
+  "postCreateCommand": "mkdir -p \"$HOME/src\" && if [ ! -d \"$HOME/src/opencode-config/.git\" ]; then gh repo clone theDRElabs/opencode-config \"$HOME/src/opencode-config\" -- -b phone/termux-setup || git clone -b phone/termux-setup https://github.com/theDRElabs/opencode-config.git \"$HOME/src/opencode-config\"; fi && bash \"$HOME/src/opencode-config/bootstrap.sh\"",
   "customizations": {
     "vscode": {
       "extensions": [
