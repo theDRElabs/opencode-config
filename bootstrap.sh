@@ -149,7 +149,10 @@ main() {
   if [ -z "$(git config --global user.name || true)" ]; then
     log "Setting git identity"
     git config --global user.name "theDRElabs"
-    git config --global user.email "imeelijah41@gmail.com"
+    # Use the noreply address, not the real one: GitHub rejects any push whose
+    # commits carry a private email (GH007), which would leave a freshly
+    # recovered device able to clone but unable to commit.
+    git config --global user.email "144799227+theDRElabs@users.noreply.github.com"
     git config --global init.defaultBranch main
   fi
 
