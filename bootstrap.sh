@@ -23,12 +23,38 @@ detect_host() {
 
 termux_packages() {
   command -v pkg >/dev/null 2>&1 || die "pkg not found. Is this Termux?"
-  log "Termux: refreshing package index"
-  pkg update -y
-  log "Termux: installing base toolchain"
-  # nodejs-lts ships only a Corepack npm shim; install real npm too.
-  pkg install -y git nano vim tmux jq python make clang openssh proot-distro nodejs-lts npm
+  # Host layer only. These must live in Termux (musl) because they run outside
+  # the container: the proot runtime, SSH for the reverse tunnel, curl for
+  # host-side downloads, and tmux to survive the screen locking.
+  # Toolchains (git, compilers, python, node) are installed inside the Debian
+  # proot instead -- see debian_packages. Keeping a second copy in Termux only
+  # wastes 18 GB of phone disk and invites the two layers to drift apart.
+  log "Termux: installing host layer (musl)"
+  pkg install -y proot-distro openssh curl tmux termux-tools
 }
+
+debian_packages() {
+  # Everything else goes in the glibc container, next to where it is used.
+  # Guarded by a marker so re-running bootstrap does not re-run apt.
+  marker="$ROOTFS/.toolchain-installed"
+  if [ -f "$marker" ]; then
+    log "Debian: toolchain already provisioned"
+    return 0
+  fi
+  log "Debian: installing toolchain inside the proot (large download)"
+  proot-distro run debian -- bash -c "
+    set -e
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -q
+    apt-get install -y --no-install-recommends \
+      ca-certificates curl wget git jq tmux nano \
+      build-essential make python3 python3-pip nodejs npm unzip xz-utils
+  "
+  touch "$marker"
+  log "Debian: toolchain installed"
+}
+
+
 
 linux_packages() {
   if command -v apt-get >/dev/null 2>&1; then
@@ -151,6 +177,7 @@ main() {
     termux)
       termux_packages
       ensure_proot_debian
+      debian_packages
       install_opencode_phone
       ;;
     *)
