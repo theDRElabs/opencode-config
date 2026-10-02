@@ -1,0 +1,42 @@
+name: CI
+on:
+  push:
+    branches: [main, "phone/termux-setup"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate harness config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate opencode config parses as JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('opencode.jsonc','utf8')); console.log('opencode.jsonc OK')"
+
+      - name: Validate bootstrap.sh syntax
+        run: bash -n bootstrap.sh && echo "bootstrap.sh OK"
+
+      - name: Every skill has a SKILL.md
+        run: |
+          missing=0
+          for d in skills/*/; do
+            if [ ! -f "$d/SKILL.md" ]; then echo "missing SKILL.md: $d"; missing=1; fi
+          done
+          if [ "$missing" -eq 0 ]; then echo "all skills present"; fi
+          exit $missing
+
+      - name: Refuse tracked secrets
+        run: |
+          if git ls-files | grep -x ".env" >/dev/null; then
+            echo "::error::.env is tracked in git"; exit 1
+          fi
+          if git ls-files | grep -E "id_(rsa|ed25519)$" >/dev/null; then
+            echo "::error::private key is tracked in git"; exit 1
+          fi
+          echo "no secrets tracked"
