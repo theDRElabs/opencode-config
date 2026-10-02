@@ -1,11 +1,55 @@
 # Host context
 
-This is the AWS EC2 Windows instance running WSL2 Debian (x86_64, always-on
-server, user `DRE`, home `/home/ubuntu`). NOT Termux/proot/Android. Phone-era
-build lessons live in `~/projects/termux-setup/BUILD-LESSONS.md` and are
-informational only — do not apply pkg/proot-distro, memory-cap, or Android
-sideload procedures on this server.
+The primary host is an **Android phone**: Infinix X6517, Android 12 (API 31),
+arm64-v8a, no root. Termux prefix `/data/data/com.termux/files/usr`,
+`$HOME` is `/data/data/com.termux/files/home`.
 
+Layering:
+
+- **Termux (musl)** runs the OS-facing layer: `sshd` and the reverse tunnel,
+  git, node, vim, tmux, jq, python, clang, make.
+- **Debian proot-distro (glibc)** runs the OpenCode binary. OpenCode ships a
+  glibc build and cannot exec on musl, so it MUST be launched via the `oc`
+  wrapper, which enters the proot. Do not try to run `opencode` directly.
+
+Start OpenCode with `oc`, never `opencode`.
+
+## Memory constraint
+
+Roughly 940 MB available RAM (2.9 GB total, Android holds the rest). Assume
+low headroom:
+
+- Keep `subagent_depth` at 1.
+- Do not run the parallel-execution orchestrator on this host.
+- Do not launch a browser, Playwright, or Chromium here.
+- `e2e-testing` and `manual-qa-plan` are desktop/Codespaces-only.
+- Proot traces syscalls, so prefer native Termux binaries for hot paths.
+
+## Off-device work
+
+Heavy work belongs elsewhere, not on the phone:
+
+- **Codespaces** — toolchains, `node_modules`, Playwright/Chromium,
+  interactive heavy dev. Defined in `.devcontainer/devcontainer.json`.
+- **GitHub Actions** — builds, tests, CI. See `.github/workflows/ci.yml`.
+
+Do not attempt local builds or large installs on the phone. Route them to
+Codespaces or Actions and work from the results.
+
+## Provisioning
+
+`bootstrap.sh` is idempotent and rebuilds a wiped host in one run. It detects
+Termux vs Linux/Codespaces, installs packages, ensures a healthy Debian proot,
+installs OpenCode with the `oc` wrapper, clones this config and the
+`graph-memory` graph, and never overwrites an existing `.env`.
+
+## Superseded hosts
+
+Earlier harness work ran on an AWS EC2/Lightsail instance. That host is
+retired; it was a bare **Windows Server 2025** box (no WSL, no dev tooling),
+not the WSL2 Debian host earlier notes described. Any path assumption of
+`/home/ubuntu` or user `DRE` is stale. Keep this file current when the primary
+host changes.
 # Communication rules (user-mandated)
 
 These rules are hard requirements set by the user. They override any
