@@ -1,0 +1,31 @@
+{
+  "name": "OpenCode Harness Host",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "upgradePackages": false,
+      "installDocker": true
+    }
+  },
+  "remoteEnv": {
+    "CFGDIR": "${containerEnv:HOME}/.config/opencode"
+  },
+  "postCreateCommand": "bash ~/.config/opencode/bootstrap.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "github.vscode-github-actions"
+      ]
+    }
+  }
+}
