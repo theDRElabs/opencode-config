@@ -9,6 +9,7 @@ REPO_URL="${GIT_REPO_URL:-https://github.com/theDRElabs/opencode-config.git}"
 BRANCH="${GIT_BRANCH:-phone/termux-setup}"
 GRAPH_URL="${GRAPH_REPO_URL:-https://github.com/theDRElabs/graph-memory.git}"
 CFGDIR="$HOME/.config/opencode"
+ROOTFS="${PREFIX:+$PREFIX/var/lib/proot-distro/containers/debian/rootfs}"
 
 log()  { printf "==> %s\n" "$*"; }
 warn() { printf "[!] %s\n" "$*" >&2; }
@@ -63,26 +64,51 @@ ensure_proot_debian() {
 }
 
 install_opencode_phone() {
-  bin="$PREFIX/bin/opencode"
-  rootfs="$PREFIX/var/lib/proot-distro/containers/debian/rootfs"
-  if [ ! -x "$bin" ]; then
-    log "Downloading opencode (linux-arm64)"
-    mkdir -p "$PREFIX/tmp"
-    curl -fsSL https://github.com/sst/opencode/releases/latest/download/opencode-linux-arm64.tar.gz -o "$PREFIX/tmp/oc.tar.gz"
-    tar xzf "$PREFIX/tmp/oc.tar.gz" -C "$PREFIX/bin"
-    chmod 755 "$bin"
+  # OpenCode is a glibc ELF and has to live inside the Debian proot: Termux is
+  # musl and cannot exec it. Install straight into the rootfs and leave it
+  # there. An earlier design kept a copy in $PREFIX/bin and re-copied it on
+  # every launch, which silently reverted "opencode upgrade" -- the next
+  # launch overwrote the upgraded binary with the stale source copy.
+  dest="$ROOTFS/usr/local/bin/opencode"
+  if [ ! -x "$dest" ]; then
+    log "Downloading opencode (linux-arm64) into the proot rootfs"
+    mkdir -p "$ROOTFS/usr/local/bin"
+    curl -fsSL https://github.com/sst/opencode/releases/latest/download/opencode-linux-arm64.tar.gz -o "$PREFIX/oc.tar.gz"
+    tar xzf "$PREFIX/oc.tar.gz" -C "$ROOTFS/usr/local/bin"
+    chmod 755 "$dest"
+    rm -f "$PREFIX/oc.tar.gz"
   fi
-  cat > "$PREFIX/bin/oc" <<WRAP
+
+  # Thin launcher: no copy, no staging, no state left in the rootfs.
+  # Quoted heredoc so nothing expands at write time.
+  cat > "$PREFIX/bin/oc" <<'WRAP'
 #!/data/data/com.termux/files/usr/bin/bash
-R="\$PREFIX/var/lib/proot-distro/containers/debian/rootfs"
-mkdir -p "\$R/usr/local/bin"
-cp -f "\$PREFIX/bin/opencode" "\$R/usr/local/bin/opencode"
-chmod 755 "\$R/usr/local/bin/opencode"
-exec proot-distro run debian -- /usr/local/bin/opencode "\$@"
+# OpenCode runs inside the Debian proot (glibc); Termux is musl and cannot
+# exec it. Config is symlinked: /root/.config/opencode -> Termux home.
+exec proot-distro run debian -- /usr/local/bin/opencode "$@"
 WRAP
   chmod 755 "$PREFIX/bin/oc"
-  log "Installed wrapper: oc"
+  log "Installed launcher: oc"
 }
+
+
+
+link_config_into_proot() {
+  # proot sets HOME to /root, NOT the Termux home, so opencode reads
+  # /root/.config/opencode and would otherwise see an empty config -- every
+  # skill, agent and command installed into $CFGDIR would be invisible.
+  # Symlink rather than copy: one copy, in a git-visible location, and this
+  # recreates the link if the rootfs is ever rebuilt.
+  [ -n "$ROOTFS" ] || return 0
+  link="$ROOTFS/root/.config/opencode"
+  mkdir -p "$ROOTFS/root/.config"
+  if [ -L "$link" ] || [ -e "$link" ]; then
+    rm -rf "$link"
+  fi
+  ln -s "$CFGDIR" "$link"
+  log "Linked $link -> $CFGDIR"
+}
+
 
 install_config() {
   src="$1"
@@ -144,6 +170,7 @@ main() {
   fi
 
   install_config "$REPO"
+  if [ "$HOST" = termux ]; then link_config_into_proot; fi
   install_graph
 
   if [ -z "$(git config --global user.name || true)" ]; then
