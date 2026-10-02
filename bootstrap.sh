@@ -41,12 +41,20 @@ linux_packages() {
 # the Debian proot providing /lib/ld-linux-aarch64.so.1.
 ensure_proot_debian() {
   command -v proot-distro >/dev/null 2>&1 || die "proot-distro missing"
-  if proot-distro list 2>/dev/null | grep -q "debian"; then
-    log "proot: debian container present"
-  else
-    log "proot: installing debian (large download)"
-    proot-distro install debian
-  fi
+  # proot-distro prints its container list to STDERR, not stdout, so piping
+  # `proot-distro list 2>/dev/null` into a test discarded the very output being
+  # checked: the container was always reported absent, and bootstrap died on
+  # "container 'debian' already exists". Capture the output instead.
+  # Avoid `| grep -q` here as well -- under `set -o pipefail` a short-circuiting
+  # grep can surface a SIGPIPE failure from the left side of the pipe.
+  proot_list="$(proot-distro list 2>&1 || true)"
+  case "$proot_list" in
+    *debian*) log "proot: debian container present" ;;
+    *)
+      log "proot: installing debian (large download)"
+      proot-distro install debian
+      ;;
+  esac
   if ! proot-distro run debian -- true >/dev/null 2>&1; then
     warn "debian container unhealthy; recreating"
     proot-distro remove debian || true
@@ -66,11 +74,11 @@ install_opencode_phone() {
   fi
   cat > "$PREFIX/bin/oc" <<WRAP
 #!/data/data/com.termux/files/usr/bin/bash
-R="$PREFIX/var/lib/proot-distro/containers/debian/rootfs"
-mkdir -p "$R/usr/local/bin"
-cp -f "$PREFIX/bin/opencode" "$R/usr/local/bin/opencode"
-chmod 755 "$R/usr/local/bin/opencode"
-exec proot-distro run debian -- /usr/local/bin/opencode "$@"
+R="\$PREFIX/var/lib/proot-distro/containers/debian/rootfs"
+mkdir -p "\$R/usr/local/bin"
+cp -f "\$PREFIX/bin/opencode" "\$R/usr/local/bin/opencode"
+chmod 755 "\$R/usr/local/bin/opencode"
+exec proot-distro run debian -- /usr/local/bin/opencode "\$@"
 WRAP
   chmod 755 "$PREFIX/bin/oc"
   log "Installed wrapper: oc"
