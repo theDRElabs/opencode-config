@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 687fa8343fe9fe9779ddc0eaabc0a93636d18c3a)
 # OpenCode Config
 
 **A complete AI software-development harness for [OpenCode](https://opencode.ai) — built on a 3GB RAM Android phone, with no laptop and no VPS.**
@@ -100,7 +101,9 @@ All 15 harness phases complete (Milestones A–C: manual pipeline → safe seque
 
 ## Secrets
 
-No API keys are committed. `.env.example` holds placeholders only; real keys live in an untracked `.env`. CI fails if a `.env` or private key is ever tracked.
+No API keys are committed. `.env.example` holds placeholders only; real keys live in an untracked `.env`. `.gitignore` also excludes `/auth.json` and `/graph/`.
+
+There is no CI in this repo, so nothing enforces that automatically — it relies on `.gitignore` alone. If you fork this, add a guard that fails the build if a `.env`, `auth.json`, or private key ever gets tracked.
 
 ## License
 
