@@ -1,2 +1,0 @@
-storePassword=Xa7bY9zQw2Er5Ty8Ui1Op
-api_key = sk-ant-api03-Zz9Qw8Er7Ty6Ui5Op4As3Df2Gh1Jk0L
