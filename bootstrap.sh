@@ -42,17 +42,47 @@ debian_packages() {
     return 0
   fi
   log "Debian: installing toolchain inside the proot (large download)"
-  proot-distro run debian -- bash -c "
-    set -e
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get update -q
-    apt-get install -y --no-install-recommends \
-      ca-certificates curl wget git jq tmux nano \
-      build-essential make python3 python3-pip nodejs npm unzip xz-utils
-  "
+
+  # $PREFIX is bind-mounted into the container, so a script written under it is
+  # visible from inside. That avoids a deeply nested bash -c and all the quote
+  # escaping that comes with it.
+  inner="$PREFIX/tmp/debian-packages.sh"
+  mkdir -p "$PREFIX/tmp"
+  cat > "$inner" <<'INNER'
+#!/bin/bash
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+
+# A mobile carrier transparently redirects plain-HTTP package fetches. On MTN
+# every .deb request returns 410 Gone from bemobi.mtn.ng, so apt installs
+# nothing and still exits 0. Force HTTPS.
+sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources
+
+# No ca-certificates package yet -- installing it needs apt. Borrow the CA
+# bundle from the host, which is bind-mounted and readable from in here.
+mkdir -p /etc/apt/apt.conf.d
+printf 'Acquire::https::CaInfo "%s";' /data/data/com.termux/files/usr/etc/tls/cert.pem \
+  > /etc/apt/apt.conf.d/99-host-ca
+
+apt-get update -q
+apt-get install -y --no-install-recommends \
+  ca-certificates curl wget git jq tmux nano \
+  build-essential make python3 python3-pip nodejs npm unzip xz-utils
+
+# Do not trust apt exit status alone: a 410-intercepted mirror yields a
+# clean-looking run with nothing installed. Assert the packages landed.
+for p in ca-certificates git jq build-essential python3 nodejs npm; do
+  dpkg -s "$p" >/dev/null 2>&1 || { echo "apt did not install: $p" >&2; exit 1; }
+done
+INNER
+
+  proot-distro run debian -- bash "$inner"
+  rm -f "$inner"
   touch "$marker"
   log "Debian: toolchain installed"
 }
+
+
 
 
 
