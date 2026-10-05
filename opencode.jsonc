@@ -7,6 +7,11 @@
       "url": "https://mcp.context7.com/mcp",
       "enabled": true
     },
+    "graph-memory": {
+      "type": "local",
+      "command": ["node", "/workspaces/graph-memory/scripts/mcp-server.mjs"],
+      "enabled": true
+    },
     "playwright": {
       "type": "local",
       "command": ["bash", "/home/ubuntu/.config/opencode/playwright-win-chrome.sh"],
