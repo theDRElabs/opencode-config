@@ -87,7 +87,7 @@ the harness is built — not present on this instance yet).
 Persistent knowledge graph at `/workspaces/graph-memory/` (JSONL triple store
 with provenance, own private GitHub repo), NOT `~/.config/opencode/graph/`. Full
 workflow lives in the `graph-memory` skill. MCP server entry is configured in
-`~/.config/opencode/opencode.json` as
+`~/.config/opencode/opencode.jsonc` as
 `node /workspaces/graph-memory/scripts/mcp-server.mjs`.
 
 Always-on rules:

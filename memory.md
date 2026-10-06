@@ -1,3 +1,7 @@
+# memory.md (legacy, other hosts)
+
+> LEGACY: all entries below predate this Codespace (Windows `/mnt/c` and old EC2 `/home/ubuntu` hosts). Kept for history; not active context.
+
 
 ## 2026-09-12 22:12 /mnt/c/Users/Administrator
 last: You are in a read-only verification context. Do NOT modify any files, do not run any write commands. Run these commands …

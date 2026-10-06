@@ -108,3 +108,5 @@ There is no CI in this repo, so nothing enforces that automatically — it relie
 ## License
 
 [MIT](./LICENSE)
+
+> LEGACY: superseded by `/workspaces/Opencode` as the canonical harness repo on this Codespace. Kept for reference (skills, plugins, scripts). Do not add new harness config here.

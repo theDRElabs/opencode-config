@@ -1,3 +1,7 @@
+# DATACHECK-PROMPT
+
+> LEGACY: references the old EC2 host (`/home/ubuntu/...`). Not applicable on this Codespace. Superseded by the Phase 0 audit at `/workspaces/Opencode/HARNESS-AUDIT.md`.
+
 # DataCheck — New Session Prompt (M6: issues 003 + 004)
 
 Read `/home/ubuntu/projects/data-check/AGENTS.md` and
