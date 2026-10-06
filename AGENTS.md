@@ -1,10 +1,10 @@
 # Host context
 
-This is the AWS EC2 Windows instance running WSL2 Debian (x86_64, always-on
-server, user `DRE`, home `/home/ubuntu`). NOT Termux/proot/Android. Phone-era
-build lessons live in `~/projects/termux-setup/BUILD-LESSONS.md` and are
-informational only — do not apply pkg/proot-distro, memory-cap, or Android
-sideload procedures on this server.
+This is a GitHub Codespace (always-on cloud dev container, x86_64), user
+`codespace`, home `/home/codespace`, repos under `/workspaces`. It is NOT the
+old AWS EC2/WSL2 box, NOT Termux/proot/Android, and NOT the EC2 server user
+`DRE` context some older notes reference. Old phone-era build lessons and
+EC2-specific sideload/proot procedures do not apply here.
 
 # Communication rules (user-mandated)
 
@@ -65,6 +65,10 @@ user asking. One command does it end to end:
 pipeline-init <project-name>
 ```
 
+NOTE: `pipeline-init` is NOT installed on this Codespace instance yet (no binary
+on PATH, no `docs/build-pipeline.md`). Until it is installed, do not invoke it —
+check with the user before wiring project CI/CD manually.
+
 What it writes, platform detection (Android / iOS / web), the mobile CI
 templates, and the environment traps: `docs/build-pipeline.md`.
 
@@ -75,13 +79,16 @@ repo or deployment intent; projects the user explicitly keeps local-only.
 
 Every harness incident that required a fix becomes a fixture case in the same
 session that fixes it. Template, rule, and running count:
-`fixtures/_intake/README.md`.
+`/workspaces/Opencode/fixtures/_intake/README.md` (directory to be created when
+the harness is built — not present on this instance yet).
 
 # Knowledge graph (graph-memory)
 
-Persistent knowledge graph at `~/.config/opencode/graph/` (JSONL triple store
-with provenance, own private GitHub repo). Full workflow lives in the
-`graph-memory` skill.
+Persistent knowledge graph at `/workspaces/graph-memory/` (JSONL triple store
+with provenance, own private GitHub repo), NOT `~/.config/opencode/graph/`. Full
+workflow lives in the `graph-memory` skill. MCP server entry is configured in
+`~/.config/opencode/opencode.json` as
+`node /workspaces/graph-memory/scripts/mcp-server.mjs`.
 
 Always-on rules:
 - Multi-step tasks — edge test before parallelizing: if a step does not consume
@@ -97,3 +104,12 @@ Always-on rules:
 Verification separation (the producer of a change is never its only verifier) is
 defined in `HARNESS-CONTRACT.md` § Verification Separation — do not restate it
 here.
+
+# Harness contract and roadmap
+
+- Operating contract for harness work: `~/.config/opencode/HARNESS-CONTRACT.md`
+  (real file: `/workspaces/Opencode/HARNESS-CONTRACT.md`).
+- Control document for harness build phases:
+  `~/.config/opencode/HARNESS-ROADMAP.md` (real file:
+  `/workspaces/Opencode/HARNESS-ROADMAP.md`). All phases are `pending` on this
+  instance — nothing has been built yet.
