@@ -1,4 +1,4 @@
-successfully downloaded text file (SHA: 687fa8343fe9fe9779ddc0eaabc0a93636d18c3a)
+
 # OpenCode Config
 
 **A complete AI software-development harness for [OpenCode](https://opencode.ai) — built on a 3GB RAM Android phone, with no laptop and no VPS.**
